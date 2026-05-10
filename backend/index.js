@@ -40,8 +40,8 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
+// Express 5 path-to-regexp does not accept "*" as a route; `cors()` already answers OPTIONS preflight when mounted with `use`.
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
 
 app.use(express.json());
 
