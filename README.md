@@ -93,6 +93,7 @@ If the server still exits immediately, check the log line **`Diagnostics (values
 ## Configuration notes
 
 - **MongoDB**: Copy `backend/.env.example` to `backend/.env` for local development. On Railway, set the **`MONGODB_URI`** variable in the dashboard. Never commit `.env`.
+- **MongoDB Atlas → Network Access (IP allowlist):** Your app does **not** configure a “Railway IP” in code. Atlas decides who may open a TCP connection. **Railway uses changing outbound IPs**, so you cannot reliably whitelist a single Railway address unless you use a platform feature for **static egress IPs** (if available on your plan). An entry **`0.0.0.0/0`** means “allow from any IP” — that includes Railway and is the usual choice when you rely on **database username/password** (and TLS) instead of IP lockdown. Your own `/32` entries only cover **those fixed addresses** (e.g. your home/office); they do **not** replace `0.0.0.0/0` for Railway. If Atlas blocks the host, logs tend to show **timeouts** or **server selection** errors, not *No MongoDB connection string found* (that message is only missing `MONGODB_URI` / related env vars on Railway).
 - **SMTP**: Gmail often requires an [App Password](https://support.google.com/accounts/answer/185833) if 2FA is enabled.  
 - **CORS**: The backend enables CORS broadly for local dev; tighten `origin` for production.  
 
