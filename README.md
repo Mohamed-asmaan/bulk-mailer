@@ -26,6 +26,8 @@ Node.js **18+**, a **MongoDB** database (Atlas ok), Excel with addresses in colu
 
 Details, env vars, and deploy steps live in each folder’s README.
 
+**Production hardening**, Railway/Vercel/Atlas checklists: **[DEPLOYMENT.md](DEPLOYMENT.md)**.
+
 ## License
 
 See `frontend/package.json` and `backend/package.json`.
