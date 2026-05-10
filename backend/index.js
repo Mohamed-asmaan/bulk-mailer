@@ -18,24 +18,14 @@ const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
 
 const app = express();
-const PORT = Number(process.env.PORT) || 5000;
+const PORT = process.env.PORT || 5000;
 
-// Must run before routes and express.json().
-const VERCEL_ORIGIN = "https://bulk-mailer-seven-mu.vercel.app";
-const CORS_ORIGINS = [
-  ...(process.env.FRONTEND_ORIGIN?.trim() ? [process.env.FRONTEND_ORIGIN.trim()] : []),
-  VERCEL_ORIGIN,
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-].filter((o, i, a) => a.indexOf(o) === i);
-
+// Before routes and express.json(). OPTIONS needed for browser preflight on POST + JSON.
 app.use(
   cors({
-    origin: CORS_ORIGINS,
+    origin: "https://bulk-mailer-seven-mu.vercel.app",
     methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Accept", "Authorization", "X-Requested-With"],
     credentials: true,
-    optionsSuccessStatus: 204,
   }),
 );
 app.use(express.json());
@@ -132,5 +122,5 @@ app.post("/sendmail", async (req, res) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log("Server running");
 });

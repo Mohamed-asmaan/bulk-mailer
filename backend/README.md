@@ -13,7 +13,11 @@ npm start      # listens on PORT (Railway) or 5000 locally
 
 ## CORS
 
-The **`cors`** middleware runs **before** `express.json()` and all routes. It allows **`https://bulk-mailer-seven-mu.vercel.app`**, **`http://localhost:5173`**, and **`http://127.0.0.1:5173`**, **`OPTIONS`** included for preflight, **`credentials: true`**. Override or add hosts with **`FRONTEND_ORIGIN`** (single URL) on Railway. The Vite client calls Axios with **`withCredentials: true`**. Temporary debugging: **`app.use(cors())`** allows every origin — remove before production-wide exposure.
+**`cors`** is registered **before** `express.json()` and routes — **`origin: https://bulk-mailer-seven-mu.vercel.app`**, **`credentials: true`**, **`methods`** include **`OPTIONS`** so JSON **`POST`** preflight succeeds. Debugging only: **`app.use(cors())`**.
+
+**Note:** Cross-origin **`localhost:5173` → production Railway** requests will fail CORS until you widen **`origin`** (or run the API locally). **`PORT`** defaults to **`5000`**; Railway injects **`PORT`**. **`app.listen`** binds **`0.0.0.0`** so the container accepts external traffic.
+
+Frontend on Vercel: set **`VITE_API_URL=https://bulk-mailer-production-c860.up.railway.app`** (or rely on **`frontend/.env.production`**) and redeploy.
 
 ## Environment
 
