@@ -13,6 +13,28 @@ const API_BASE = import.meta.env.DEV
       (import.meta.env.PROD ? RAILWAY_API_ORIGIN : 'http://localhost:5000')
     ).replace(/\/$/, '')
 
+const API_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS) || 180000
+
+function sendSuccess(data) {
+  return data === true || (data && typeof data === 'object' && data.ok === true)
+}
+
+function formatApiError(err) {
+  const isNetwork =
+    err.code === "ERR_NETWORK" || err.message?.toLowerCase().includes("network")
+  if (isNetwork) {
+    return "Cannot reach API (check CORS, Railway deploy, or your connection)."
+  }
+  const body = err.response?.data
+  const msg =
+    (body && typeof body === "object" && (body.message || body.error)) ||
+    err.response?.statusText ||
+    err.message ||
+    "unknown"
+  const code = body?.code ? ` [${body.code}]` : ""
+  return `Request failed${code}: ${msg}`
+}
+
 function App() {
 
   const [msg, setmsg] = useState("")
@@ -27,23 +49,19 @@ function App() {
 
   function send() {
     setstatus(true)
-    axios.post(`${API_BASE}/sendmail`, { msg, emailList })
+    axios
+      .post(`${API_BASE}/sendmail`, { msg, emailList }, { timeout: API_TIMEOUT_MS })
       .then((res) => {
-        if (res.data === true) {
-          alert("Email sent successfully")
+        if (sendSuccess(res.data)) {
+          const n = res.data?.sent ?? emailList.length
+          alert(`Email sent successfully (${n} recipient${n === 1 ? "" : "s"})`)
         } else {
-          alert("Send failed — check backend logs.")
+          alert("Send failed — unexpected response. Check backend logs.")
         }
       })
       .catch((err) => {
         console.error(err)
-        const isNetwork =
-          err.code === "ERR_NETWORK" || err.message?.toLowerCase().includes("network")
-        alert(
-          isNetwork
-            ? "Cannot reach API (blocked by browser or backend down — check CORS and Railway)."
-            : "Request failed: " + (err.response?.data?.message || err.message || "unknown"),
-        )
+        alert(formatApiError(err))
       })
       .finally(() => setstatus(false))
   }
@@ -64,9 +82,9 @@ function App() {
     const sheetName = workbook.SheetNames[0]
     const worksheet = workbook.Sheets[sheetName]
     const emailList =   XLSX.utils.sheet_to_json(worksheet, { header: 'A' })
-    const totalemail = emailList.map((item)=>{
-      return (item.A)
-    })
+    const totalemail = emailList
+      .map((item) => (typeof item.A === "string" ? item.A.trim() : item.A != null ? String(item.A).trim() : ""))
+      .filter((e) => e.length > 0)
 
     setemailList(totalemail)
 

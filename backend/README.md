@@ -1,6 +1,9 @@
 # Backend (Bulk Mail)
 
-Express API: **`POST /sendmail`** with JSON `{ "msg": string, "emailList": string[] }`. Reads SMTP `user` / `pass` from MongoDB collection **`bulkmail`** (MongoDB via **`MONGODB_URI`** on Railway or `backend/.env` locally). **`GET /health`** returns plain `ok` (quick check that the service is reachable).
+Express API: **`POST /sendmail`** with JSON `{ "msg": string, "emailList": string[] }`. Reads SMTP `user` / `pass` from MongoDB collection **`bulkmail`** (MongoDB via **`MONGODB_URI`** on Railway or `backend/.env` locally).
+
+- **`GET /health`** returns plain **`ok`** (simple probes).
+- **`GET /health/diagnostics`** returns JSON uptime/Mongo thresholds; optional gated SMTP **`verify`** (see **`../DEPLOYMENT.md`**).
 
 **Deployed API:** [https://bulk-mailer-production-c860.up.railway.app](https://bulk-mailer-production-c860.up.railway.app) — used by the Vercel app [https://bulk-mailer-seven-mu.vercel.app/](https://bulk-mailer-seven-mu.vercel.app/).
 
@@ -11,15 +14,15 @@ npm install
 npm start      # listens on PORT (Railway) or 5000 locally
 ```
 
-## CORS
+## Ops & CORS / production checklist
 
-**`cors`** runs **before** `express.json()` and routes. **`origin`** includes production Vercel plus local dev; **`credentials: false`** (this API doesn’t rely on cookies) for fewer mobile/Safari preflight failures. **`allowedHeaders`** includes **`Content-Type`** for JSON. Debug: **`app.use(cors())`**.
+Canonical steps and env vars live in **`../DEPLOYMENT.md`** (Railway/Vercel/Atlas/Gmail/SMTP).
 
-**`PORT`:** `process.env.PORT || 5000` (**Railway** sets **`PORT`**). **`app.listen`** uses **`0.0.0.0`**.
+**Runtime order:** **`cors` → limit-size `express.json` → `GET /health` routes → _(after Mongo connects)_ → `POST /sendmail` → `404` → centralized error middleware → `listen`** on **`process.env.PORT || 5000`** and **`0.0.0.0`**.
 
-Vercel: **`VITE_API_URL=https://bulk-mailer-production-c860.up.railway.app`** or **`frontend/.env.production`**, then redeploy.
+CORS **`origin`** is an allow-list (production Vercel URL + localhost Vite ports + optional **`FRONTEND_ORIGINS`**). **`OPTIONS`** preflight is handled by the **`cors`** package (do not use **`app.options('*')`** on Express 5).
 
-If Network shows **no response headers** for **`sendmail`**, confirm **two** entries exist (**`OPTIONS`** then **`POST`**) and open **`GET /health`** in the device browser — if that fails, the container isn’t serving Node yet.
+If **`sendmail`** shows no CORS headers, confirm **`OPTIONS`** + **`POST`** in DevTools — if **`GET /health`** fails, the Railway service is not accepting traffic yet (**`502`** is often boot/crash/offline, not the browser blocking JSON).
 
 ### Railway **`502`** / HTTP logs **`upstream connection refused`**
 
