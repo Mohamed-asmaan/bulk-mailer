@@ -37,10 +37,10 @@ console.log(`Using MongoDB from environment variable: ${mongoEnvKey}`);
 
 mongoose.connect(mongoUri)
   .then(() => {
-    console.log("connected to db");
+    console.log("MongoDB connected");
   })
-  .catch(() => {
-    console.log("connection failed to db");
+  .catch((err) => {
+    console.error("MongoDB connection failed:", err?.message || err);
   });
 
 app.post("/sendmail", async (req, res) => {
@@ -91,5 +91,5 @@ app.post("/sendmail", async (req, res) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server listening on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

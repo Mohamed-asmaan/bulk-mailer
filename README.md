@@ -69,8 +69,24 @@ Serve the `frontend/dist` output with any static host (this project’s UI is de
 ### Railway (backend)
 
 1. Set the service **root directory** to `backend` (or run `npm start` from the folder that contains `package.json` and `index.js`).
-2. Under **Variables**, add **`MONGODB_URI`** with your full MongoDB connection string (same value you would put in `backend/.env`). Railway does **not** read `backend/.env` from the repo — the container only sees variables you define here. If `MONGODB_URI` is missing, the process exits and you will see that message in the logs.
-3. **`npm warn config production Use --omit=dev instead`** is an npm notice, not a crash; it does not stop the app.
+2. Open the **same** Railway service that runs this API (e.g. `bulk-mailer-production`), go to **Variables** (not only project-wide settings), and add **`MONGODB_URI`** with your full Atlas (or other) connection string — the same URI you use in `backend/.env` locally. **Name must match exactly:** `MONGODB_URI` (or use one of: `DATABASE_URL`, `MONGO_URL`, `MONGODB_URL`). Railway does **not** load `backend/.env` from Git; if this variable is missing, the app exits and logs *No MongoDB connection string found* in a restart loop.
+3. Save variables, then trigger a **redeploy** (or push a commit) so a new deploy picks them up.
+4. **`npm warn config production Use --omit=dev instead`** is an npm notice, not a crash; it does not stop the app.
+
+#### If logs say *No MongoDB connection string found*
+
+Railway never reads `backend/.env` from the repo. The server only reads **`process.env`** (Railway **Variables** or a local `.env` file).
+
+1. In [Railway](https://railway.app), open your project → the **backend** service that runs `npm start` / `node index.js`.
+2. Open the **Variables** tab and add **`MONGODB_URI`** (exact name) with your full URI, for example from MongoDB Atlas:
+
+   `mongodb+srv://USERNAME:PASSWORD@cluster0.xxxxx.mongodb.net/yourdbname?retryWrites=true&w=majority`
+
+   The code also accepts **`DATABASE_URL`**, **`MONGO_URL`**, or **`MONGODB_URL`** if you already use one of those names elsewhere.
+
+3. **Deploy** or **Redeploy** the service. Healthy logs should include **`MongoDB connected`** and **`Server running on port …`** (Railway sets `PORT` automatically; locally it defaults to **5000**).
+
+The backend connects with `mongoose.connect(...)` using the first non-empty value from those variables (see `resolveMongoUri()` in `backend/index.js`).
 
 ## Configuration notes
 
