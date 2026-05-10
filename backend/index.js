@@ -13,35 +13,31 @@ if (process.env.RAILWAY_SERVICE_NAME || process.env.RAILWAY_PROJECT_NAME) {
 }
 
 const express = require("express");
+const cors = require("cors");
 const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 
-/**
- * Browser-safe CORS for public JSON endpoints. `Access-Control-Allow-Origin: *` works with Axios
- * default (no credentials) and avoids preflight/origin mismatches between Vercel and Railway.
- */
-function publicApiCors(req, res, next) {
-  const path = req.path || "";
-  if (path !== "/sendmail" && path !== "/health") {
-    return next();
-  }
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Accept, Authorization, X-Requested-With",
-  );
-  res.setHeader("Access-Control-Max-Age", "86400");
-  if (req.method === "OPTIONS") {
-    return res.status(204).end();
-  }
-  next();
-}
+// Must run before routes and express.json().
+const VERCEL_ORIGIN = "https://bulk-mailer-seven-mu.vercel.app";
+const CORS_ORIGINS = [
+  ...(process.env.FRONTEND_ORIGIN?.trim() ? [process.env.FRONTEND_ORIGIN.trim()] : []),
+  VERCEL_ORIGIN,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+].filter((o, i, a) => a.indexOf(o) === i);
 
-app.use(publicApiCors);
+app.use(
+  cors({
+    origin: CORS_ORIGINS,
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Accept", "Authorization", "X-Requested-With"],
+    credentials: true,
+    optionsSuccessStatus: 204,
+  }),
+);
 app.use(express.json());
 
 const MONGO_URI_ENV_KEYS = ["MONGODB_URI", "DATABASE_URL", "MONGO_URL", "MONGODB_URL"];

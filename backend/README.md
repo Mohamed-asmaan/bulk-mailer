@@ -13,7 +13,7 @@ npm start      # listens on PORT (Railway) or 5000 locally
 
 ## CORS
 
-For **`POST /sendmail`** and **`GET /health`**, the server sets **`Access-Control-Allow-Origin: *`** and answers **`OPTIONS`** with **204** (no credentials, so `*` is valid for browser `fetch`/`XMLHttpRequest`). If the Network tab still shows no CORS headers, the reply is usually **not from this Express app** (e.g. Railway proxy error)—open **`GET /health`** and check deploy logs.
+The **`cors`** middleware runs **before** `express.json()` and all routes. It allows **`https://bulk-mailer-seven-mu.vercel.app`**, **`http://localhost:5173`**, and **`http://127.0.0.1:5173`**, **`OPTIONS`** included for preflight, **`credentials: true`**. Override or add hosts with **`FRONTEND_ORIGIN`** (single URL) on Railway. The Vite client calls Axios with **`withCredentials: true`**. Temporary debugging: **`app.use(cors())`** allows every origin — remove before production-wide exposure.
 
 ## Environment
 

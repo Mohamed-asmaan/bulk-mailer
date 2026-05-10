@@ -30,7 +30,7 @@ npm run preview  # test production bundle locally
 
 - **Root Directory:** `frontend` (optional if build command cd’s here).
 - **Build:** `npm install && npm run build`
-- **`VITE_API_URL`:** Optional if `.env.production` matches your API; set in the dashboard to override without code changes.
+- **`VITE_API_URL`:** Use `https://bulk-mailer-production-c860.up.railway.app` (no slash) — set in Project → Settings → Env *or* keep [`.env.production`](.env.production); redeploy after changes.
 
 ## Excel
 
