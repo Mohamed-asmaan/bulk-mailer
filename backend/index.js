@@ -13,7 +13,6 @@ if (process.env.RAILWAY_SERVICE_NAME || process.env.RAILWAY_PROJECT_NAME) {
 }
 
 const express = require("express");
-const cors = require("cors");
 const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
 
@@ -30,20 +29,26 @@ const ALLOWED_ORIGINS = process.env.FRONTEND_ORIGINS
   ? process.env.FRONTEND_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean)
   : DEFAULT_FRONTEND_ORIGINS;
 
-const corsOptions = {
-  origin(origin, callback) {
-    if (!origin) return callback(null, true);
-    return callback(null, ALLOWED_ORIGINS.includes(origin));
-  },
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"],
-  optionsSuccessStatus: 204,
-};
+/** Explicit CORS for Express 5 (avoids preflight quirks with the `cors` package + path-to-regexp). */
+function allowlistCors(req, res, next) {
+  const origin = req.headers.origin;
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Accept, Authorization, X-Requested-With",
+  );
+  res.setHeader("Access-Control-Max-Age", "86400");
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+  next();
+}
 
-// Express 5 / path-to-regexp v8+: do not use app.options('*', …) — it crashes at startup.
-// `cors()` handles OPTIONS preflight for matching requests.
-app.use(cors(corsOptions));
-
+app.use(allowlistCors);
 app.use(express.json());
 
 const MONGO_URI_ENV_KEYS = ["MONGODB_URI", "DATABASE_URL", "MONGO_URL", "MONGODB_URL"];
@@ -85,6 +90,10 @@ mongoose.connect(mongoUri)
   .catch((err) => {
     console.error("MongoDB connection failed:", err?.message || err);
   });
+
+app.get("/health", (_req, res) => {
+  res.type("text").send("ok");
+});
 
 app.post("/sendmail", async (req, res) => {
 

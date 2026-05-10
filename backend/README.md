@@ -1,6 +1,6 @@
 # Backend (Bulk Mail)
 
-Express API: **`POST /sendmail`** with JSON `{ "msg": string, "emailList": string[] }`. Reads SMTP `user` / `pass` from MongoDB collection **`bulkmail`** (MongoDB via **`MONGODB_URI`** on Railway or `backend/.env` locally).
+Express API: **`POST /sendmail`** with JSON `{ "msg": string, "emailList": string[] }`. Reads SMTP `user` / `pass` from MongoDB collection **`bulkmail`** (MongoDB via **`MONGODB_URI`** on Railway or `backend/.env` locally). **`GET /health`** returns plain `ok` (quick check that the service is reachable).
 
 **Deployed API:** [https://bulk-mailer-production-c860.up.railway.app](https://bulk-mailer-production-c860.up.railway.app) — used by the Vercel app [https://bulk-mailer-seven-mu.vercel.app/](https://bulk-mailer-seven-mu.vercel.app/).
 
@@ -13,7 +13,7 @@ npm start      # listens on PORT (Railway) or 5000 locally
 
 ## CORS
 
-By default the API allows only the live UI (**`https://bulk-mailer-seven-mu.vercel.app`**). For local development (`npm run dev` on Vite), set **`FRONTEND_ORIGINS`** in `backend/.env` (comma‑separated, include the Vercel URL plus `http://localhost:5173` if you want both). You can replace the entire list via Railway variables if you add another production domain.
+The API sets **`Access-Control-Allow-Origin`** only for **`https://bulk-mailer-seven-mu.vercel.app`** and local Vite (`http://localhost:5173`, `http://127.0.0.1:5173`). **`OPTIONS`** preflight replies with **204** before routes run (manual middleware, tuned for Express 5). Override with **`FRONTEND_ORIGINS`** (comma‑separated) if the UI hostname changes (e.g. another Vercel preview domain).
 
 ## Environment
 
