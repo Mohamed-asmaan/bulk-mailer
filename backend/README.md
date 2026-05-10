@@ -13,7 +13,7 @@ npm start      # listens on PORT (Railway) or 5000 locally
 
 ## CORS
 
-The API allows **`https://bulk-mailer-seven-mu.vercel.app`** and local Vite (`http://localhost:5173`, `http://127.0.0.1:5173`) by default. Override with **`FRONTEND_ORIGINS`** (comma‑separated) on Railway or in `.env` if you deploy the UI elsewhere.
+By default the API allows only the live UI (**`https://bulk-mailer-seven-mu.vercel.app`**). For local development (`npm run dev` on Vite), set **`FRONTEND_ORIGINS`** in `backend/.env` (comma‑separated, include the Vercel URL plus `http://localhost:5173` if you want both). You can replace the entire list via Railway variables if you add another production domain.
 
 ## Environment
 

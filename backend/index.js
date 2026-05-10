@@ -20,11 +20,8 @@ const mongoose = require("mongoose");
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 
-const DEFAULT_FRONTEND_ORIGINS = [
-  "https://bulk-mailer-seven-mu.vercel.app",
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-];
+// Production frontend only; local Vite/dev hosts need backend/.env → FRONTEND_ORIGINS (see .env.example).
+const DEFAULT_FRONTEND_ORIGINS = ["https://bulk-mailer-seven-mu.vercel.app"];
 
 const ALLOWED_ORIGINS = process.env.FRONTEND_ORIGINS
   ? process.env.FRONTEND_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean)
