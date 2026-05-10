@@ -1,4 +1,7 @@
-require("dotenv").config();
+const path = require("path");
+
+// Load backend/.env even when the process cwd is the repo root (Railway / monorepo).
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const express = require("express");
 const cors = require("cors");
@@ -11,13 +14,26 @@ const PORT = Number(process.env.PORT) || 5000;
 app.use(cors());
 app.use(express.json());
 
-const mongoUri = process.env.MONGODB_URI;
+function resolveMongoUri() {
+  const keys = ["MONGODB_URI", "DATABASE_URL", "MONGO_URL", "MONGODB_URL"];
+  for (const key of keys) {
+    const value = process.env[key]?.trim();
+    if (value) return { uri: value, key };
+  }
+  return { uri: "", key: null };
+}
+
+const { uri: mongoUri, key: mongoEnvKey } = resolveMongoUri();
 if (!mongoUri) {
   console.error(
-    "Missing MONGODB_URI. Local: copy backend/.env.example to backend/.env. Railway: open the service → Variables → add MONGODB_URI with your Atlas connection string."
+    "No MongoDB connection string found. Set one of these in Railway → Service → Variables (exact names): " +
+      "MONGODB_URI, DATABASE_URL, MONGO_URL, or MONGODB_URL. " +
+      "Local: copy backend/.env.example to backend/.env and set MONGODB_URI."
   );
   process.exit(1);
 }
+
+console.log(`Using MongoDB from environment variable: ${mongoEnvKey}`);
 
 mongoose.connect(mongoUri)
   .then(() => {
