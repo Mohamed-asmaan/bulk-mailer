@@ -90,6 +90,20 @@ The backend connects with `mongoose.connect(...)` using the first non-empty valu
 
 If the server still exits immediately, check the log line **`Diagnostics (values hidden): …`**: if every name shows **`missing`**, that Railway **service** still does not receive those variables (wrong service tab, typo in the name, or a shared variable not linked to this service). Paste the URI as a normal variable on the backend service if unsure.
 
+#### After `MONGODB_URI` is set — read the *next* log line
+
+You should **not** still see *No MongoDB connection string found*. If you do, the variable is still not reaching that service.
+
+Once the URI is present, the next failure mode is usually **auth**, **network**, or **wrong host/DB**, and the log will name it. Open **Railway → your backend service → Deployments → latest deploy → Logs**, copy the **first red / error block** after startup (or paste it into your issue/chat). The app logs **`MongoDB connection failed:`** plus Mongoose’s message when TCP/auth fails.
+
+| Log hint | Likely cause | What to check |
+|----------|----------------|----------------|
+| `bad auth` / `Authentication failed` | User or password in the URI | Atlas user exists on that cluster; password correct; if the password has `@ # : /` etc., [URL-encode](https://www.mongodb.com/docs/manual/reference/connection-string/) it in the URI. |
+| `MongooseServerSelectionError` / `timed out` / `ECONNREFUSED` | Network or cluster not reachable | Atlas **Network Access** (e.g. allow Railway), cluster not **paused**, VPN/firewall; URI host matches Atlas (**Connect → Drivers**). |
+| Connects but `/sendmail` fails | Wrong DB or missing `bulkmail` doc | Path after `.net/` is the **default database name** in the URI; your app reads collection **`bulkmail`** on the connected DB. Ensure that database has your SMTP `user` / `pass` document. |
+
+`mongoose.connect` in this repo uses the resolved URI string only — there is no second hidden config. If logs look wrong, paste the **newest** deploy log text here so it can be interpreted line-by-line.
+
 ## Configuration notes
 
 - **MongoDB**: Copy `backend/.env.example` to `backend/.env` for local development. On Railway, set the **`MONGODB_URI`** variable in the dashboard. Never commit `.env`.
