@@ -40,6 +40,9 @@ function resolveMongoUri() {
   return { uri: "", key: null };
 }
 
+// TEMP: remove after test — may print full URI (secrets) in logs
+console.log("ENV CHECK:", process.env.MONGODB_URI);
+
 const { uri: mongoUri, key: mongoEnvKey } = resolveMongoUri();
 if (!mongoUri) {
   const flags = MONGO_URI_ENV_KEYS.map((k) => `${k}=${mongoEnvStatus(k)}`).join(", ");
