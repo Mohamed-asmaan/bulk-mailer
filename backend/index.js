@@ -36,8 +36,6 @@ const corsOptions = {
   maxAge: 86400,
 };
 
-// Preflight OPTIONS is handled by this middleware — do not use app.options('*', ...) on Express 5
-// (path-to-regexp rejects bare '*' and crashes: PathError Missing parameter name at index 1: *).
 app.use(cors(corsOptions));
 
 app.use(express.json());
