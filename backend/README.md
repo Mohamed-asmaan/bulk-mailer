@@ -13,9 +13,7 @@ npm start      # listens on PORT (Railway) or 5000 locally
 
 ## CORS
 
-CORS uses the **`cors`** middleware: origins in **`ALLOWED_ORIGINS`** (built from **`FRONTEND_ORIGINS`** or defaults) plus any **`https://*.vercel.app`** host so production and previews work. **`OPTIONS`** is handled by that library (**204**). If you still see a missing **`Access-Control-Allow-Origin`** in the browser, the response often did **not** come from Node (Railway gateway error)—check **`GET /health`** and deploy logs.
-
-If **`FRONTEND_ORIGINS`** would parse empty, defaults are kept. Startup logs show **`CORS allow-list (...)`**.
+For **`POST /sendmail`** and **`GET /health`**, the server sets **`Access-Control-Allow-Origin: *`** and answers **`OPTIONS`** with **204** (no credentials, so `*` is valid for browser `fetch`/`XMLHttpRequest`). If the Network tab still shows no CORS headers, the reply is usually **not from this Express app** (e.g. Railway proxy error)—open **`GET /health`** and check deploy logs.
 
 ## Environment
 

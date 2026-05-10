@@ -13,54 +13,35 @@ if (process.env.RAILWAY_SERVICE_NAME || process.env.RAILWAY_PROJECT_NAME) {
 }
 
 const express = require("express");
-const corsLib = require("cors");
 const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 
-const DEFAULT_FRONTEND_ORIGINS = [
-  "https://bulk-mailer-seven-mu.vercel.app",
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-];
-
-/** If FRONTEND_ORIGINS exists but parses to [], no origin matched — browsers get zero CORS headers. Fallback to defaults. */
-const ALLOWED_ORIGINS = (() => {
-  const fromEnv =
-    typeof process.env.FRONTEND_ORIGINS === "string"
-      ? process.env.FRONTEND_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean)
-      : [];
-  return fromEnv.length > 0 ? fromEnv : DEFAULT_FRONTEND_ORIGINS;
-})();
-
-console.log(`CORS allow-list (${ALLOWED_ORIGINS.length}): ${ALLOWED_ORIGINS.join(" | ")}`);
-
-function corsOrigin(origin, callback) {
-  if (!origin) return callback(null, true);
-  if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
-  try {
-    const url = new URL(origin);
-    if (url.protocol === "https:" && url.hostname.endsWith(".vercel.app")) {
-      return callback(null, true);
-    }
-  } catch (_) {
-    /* ignore */
+/**
+ * Browser-safe CORS for public JSON endpoints. `Access-Control-Allow-Origin: *` works with Axios
+ * default (no credentials) and avoids preflight/origin mismatches between Vercel and Railway.
+ */
+function publicApiCors(req, res, next) {
+  const path = req.path || "";
+  if (path !== "/sendmail" && path !== "/health") {
+    return next();
   }
-  return callback(null, false);
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Accept, Authorization, X-Requested-With",
+  );
+  res.setHeader("Access-Control-Max-Age", "86400");
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+  next();
 }
 
-app.use(
-  corsLib({
-    origin: corsOrigin,
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Accept", "Authorization", "X-Requested-With"],
-    optionsSuccessStatus: 204,
-    credentials: false,
-  }),
-);
-
+app.use(publicApiCors);
 app.use(express.json());
 
 const MONGO_URI_ENV_KEYS = ["MONGODB_URI", "DATABASE_URL", "MONGO_URL", "MONGODB_URL"];
