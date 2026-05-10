@@ -36,14 +36,15 @@ function App() {
   function send() {
     setstatus(true)
     axios
-      .post(
-        `${API_BASE}/sendmail`,
-        {
-          msg: msg,
-          emailList: emailList,
+      .request({
+        method: 'POST',
+        url: `${API_BASE}/sendmail`,
+        data: { msg, emailList },
+        headers: {
+          'Content-Type': 'application/json',
+          ...API_AXIOS_CONFIG.headers,
         },
-        API_AXIOS_CONFIG,
-      )
+      })
       .then((res) => {
         if (res.data === true) {
           alert("Email sent successfully")
