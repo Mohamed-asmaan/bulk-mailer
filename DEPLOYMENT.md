@@ -59,7 +59,7 @@ Operational / tuning:
 
 ## Vercel checklist
 
-1. **`VITE_API_URL`** = `https://bulk-mailer-production-c860.up.railway.app` (no trailing slash), or bake via `.env.production`.
+1. **`VITE_API_URL`** = `https://bulk-mailer-production-c86d.up.railway.app` (no trailing slash), or bake via `.env.production`. **Must match Railway’s generated domain** (subdomain changes when you recreate the service).
 2. Redeploy after env changes — Vite bakes env at **build time**.
 3. Optionally set **`VITE_API_TIMEOUT_MS`** (milliseconds) if you routinely send hundreds of mails per click.
 

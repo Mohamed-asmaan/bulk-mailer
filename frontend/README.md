@@ -7,7 +7,7 @@ React + Vite UI: message editor, `.xlsx` / `.xls` upload (first sheet, column **
 | | URL |
 |--|-----|
 | **This UI (Vercel)** | [https://bulk-mailer-seven-mu.vercel.app/](https://bulk-mailer-seven-mu.vercel.app/) |
-| **API (Railway)** | `https://bulk-mailer-production-c860.up.railway.app` (no trailing slash) |
+| **API (Railway)** | `https://bulk-mailer-production-c86d.up.railway.app` (no trailing slash) |
 
 MongoDB credentials are configured on the **backend** (`MONGODB_URI` + `bulkmail` collection); the browser never talks to MongoDB directly.
 
@@ -30,7 +30,7 @@ npm run preview  # test production bundle locally
 
 - **Root Directory:** `frontend` (optional if build command cd’s here).
 - **Build:** `npm install && npm run build`
-- **`VITE_API_URL`:** Use `https://bulk-mailer-production-c860.up.railway.app` (no slash) — set in Project → Settings → Env *or* keep [`.env.production`](.env.production); redeploy after changes.
+- **`VITE_API_URL`:** Use `https://bulk-mailer-production-c86d.up.railway.app` (no slash) — set in Project → Settings → Env *or* keep [`.env.production`](.env.production); redeploy after changes.
 
 ## Excel
 

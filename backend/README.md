@@ -5,7 +5,7 @@ Express API: **`POST /sendmail`** with JSON `{ "msg": string, "emailList": strin
 - **`GET /health`** returns plain **`ok`** (simple probes).
 - **`GET /health/diagnostics`** returns JSON uptime/Mongo thresholds; optional gated SMTP **`verify`** (see **`../DEPLOYMENT.md`**).
 
-**Deployed API:** [https://bulk-mailer-production-c860.up.railway.app](https://bulk-mailer-production-c860.up.railway.app) — used by the Vercel app [https://bulk-mailer-seven-mu.vercel.app/](https://bulk-mailer-seven-mu.vercel.app/).
+**Deployed API:** [https://bulk-mailer-production-c86d.up.railway.app](https://bulk-mailer-production-c86d.up.railway.app) — used by the Vercel app [https://bulk-mailer-seven-mu.vercel.app/](https://bulk-mailer-seven-mu.vercel.app/).
 
 ## Scripts
 
