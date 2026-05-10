@@ -13,6 +13,7 @@ if (process.env.RAILWAY_SERVICE_NAME || process.env.RAILWAY_PROJECT_NAME) {
 }
 
 const express = require("express");
+const corsLib = require("cors");
 const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
 
@@ -36,47 +37,30 @@ const ALLOWED_ORIGINS = (() => {
 
 console.log(`CORS allow-list (${ALLOWED_ORIGINS.length}): ${ALLOWED_ORIGINS.join(" | ")}`);
 
-function isAllowedOrigin(origin) {
-  if (!origin) return false;
-  if (ALLOWED_ORIGINS.includes(origin)) return true;
+function corsOrigin(origin, callback) {
+  if (!origin) return callback(null, true);
+  if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
   try {
     const url = new URL(origin);
-    return url.protocol === "https:" && url.hostname === "bulk-mailer-seven-mu.vercel.app";
-  } catch {
-    return false;
+    if (url.protocol === "https:" && url.hostname.endsWith(".vercel.app")) {
+      return callback(null, true);
+    }
+  } catch (_) {
+    /* ignore */
   }
+  return callback(null, false);
 }
 
-function applyCorsHeaders(req, res) {
-  const origin = req.headers.origin;
-  if (origin && isAllowedOrigin(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Vary", "Origin");
-  }
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Accept, Authorization, X-Requested-With",
-  );
-  res.setHeader("Access-Control-Max-Age", "86400");
-}
+app.use(
+  corsLib({
+    origin: corsOrigin,
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Accept", "Authorization", "X-Requested-With"],
+    optionsSuccessStatus: 204,
+    credentials: false,
+  }),
+);
 
-/** Global CORS for Express 5 (no `cors` package — avoids OPTIONS / path‑regexp quirks). */
-function allowlistCors(req, res, next) {
-  applyCorsHeaders(req, res);
-  if (req.method === "OPTIONS") {
-    return res.status(204).end();
-  }
-  next();
-}
-
-/** Dedicated preflight route so `/sendmail` always returns CORS headers (some proxies/cache paths differ). */
-function optionsSendmail(_req, res) {
-  applyCorsHeaders(_req, res);
-  return res.status(204).end();
-}
-
-app.use(allowlistCors);
 app.use(express.json());
 
 const MONGO_URI_ENV_KEYS = ["MONGODB_URI", "DATABASE_URL", "MONGO_URL", "MONGODB_URL"];
@@ -122,8 +106,6 @@ mongoose.connect(mongoUri)
 app.get("/health", (_req, res) => {
   res.type("text").send("ok");
 });
-
-app.options("/sendmail", optionsSendmail);
 
 app.post("/sendmail", async (req, res) => {
 
