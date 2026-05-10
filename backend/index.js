@@ -72,9 +72,23 @@ if (!mongoUri) {
 
 console.log(`Using MongoDB from environment variable: ${mongoEnvKey}`);
 
+function credentialsDb() {
+  const override = process.env.MONGO_DB_NAME?.trim();
+  if (override) {
+    return mongoose.connection.useDb(override).db;
+  }
+  return mongoose.connection.db;
+}
+
 mongoose.connect(mongoUri)
   .then(() => {
-    console.log("MongoDB connected");
+    const defaultName = mongoose.connection.db?.databaseName;
+    console.log(
+      `MongoDB connected — default DB from URI: "${defaultName || "?"}"`,
+      process.env.MONGO_DB_NAME?.trim()
+        ? `; credentials read from override MONGO_DB_NAME="${process.env.MONGO_DB_NAME.trim()}"`
+        : "",
+    );
   })
   .catch((err) => {
     console.error("MongoDB connection failed:", err?.message || err);
@@ -91,9 +105,18 @@ app.post("/sendmail", async (req, res) => {
 
   try {
 
-    const userdata = await mongoose.connection.db
-      .collection("bulkmail")
-      .findOne({});
+    const userdata = await credentialsDb().collection("bulkmail").findOne({});
+
+    if (!userdata || typeof userdata.user !== "string" || typeof userdata.pass !== "string") {
+      console.error(
+        "SMTP credentials missing: expected one document in `bulkmail` with string fields `user` and `pass` " +
+          `(DB: URI default${process.env.MONGO_DB_NAME?.trim() ? ` overridden by MONGO_DB_NAME="${process.env.MONGO_DB_NAME.trim()}"` : ""}).`,
+      );
+      return res.send(false);
+    }
+
+    const smtpUser = userdata.user.trim();
+    const smtpPass = userdata.pass.replace(/\s+/g, "");
 
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
@@ -101,8 +124,8 @@ app.post("/sendmail", async (req, res) => {
       secure: true,
       service: "gmail",
       auth: {
-        user: userdata.user,
-        pass: userdata.pass,
+        user: smtpUser,
+        pass: smtpPass,
       },
       tls: {
         rejectUnauthorized: false,
@@ -112,7 +135,7 @@ app.post("/sendmail", async (req, res) => {
     for (let i = 0; i < emailList.length; i++) {
 
       await transporter.sendMail({
-        from: userdata.user,
+        from: smtpUser,
         to: emailList[i],
         subject: "Bulk mail",
         text: msg,
