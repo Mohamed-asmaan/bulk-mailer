@@ -28,7 +28,7 @@ function App() {
       .post(`${API_BASE}/sendmail`, {
         msg: msg,
         emailList: emailList,
-      }, { withCredentials: true })
+      })
       .then((res) => {
         if (res.data === true) {
           alert("Email sent successfully")

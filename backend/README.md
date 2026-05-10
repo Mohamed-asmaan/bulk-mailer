@@ -13,11 +13,13 @@ npm start      # listens on PORT (Railway) or 5000 locally
 
 ## CORS
 
-**`cors`** is registered **before** `express.json()` and routes — **`origin: https://bulk-mailer-seven-mu.vercel.app`**, **`credentials: true`**, **`methods`** include **`OPTIONS`** so JSON **`POST`** preflight succeeds. Debugging only: **`app.use(cors())`**.
+**`cors`** runs **before** `express.json()` and routes. **`origin`** includes production Vercel plus local dev; **`credentials: false`** (this API doesn’t rely on cookies) for fewer mobile/Safari preflight failures. **`allowedHeaders`** includes **`Content-Type`** for JSON. Debug: **`app.use(cors())`**.
 
-**Note:** Cross-origin **`localhost:5173` → production Railway** requests will fail CORS until you widen **`origin`** (or run the API locally). **`PORT`** defaults to **`5000`**; Railway injects **`PORT`**. **`app.listen`** binds **`0.0.0.0`** so the container accepts external traffic.
+**`PORT`:** `process.env.PORT || 5000` (**Railway** sets **`PORT`**). **`app.listen`** uses **`0.0.0.0`**.
 
-Frontend on Vercel: set **`VITE_API_URL=https://bulk-mailer-production-c860.up.railway.app`** (or rely on **`frontend/.env.production`**) and redeploy.
+Vercel: **`VITE_API_URL=https://bulk-mailer-production-c860.up.railway.app`** or **`frontend/.env.production`**, then redeploy.
+
+If Network shows **no response headers** for **`sendmail`**, confirm **two** entries exist (**`OPTIONS`** then **`POST`**) and open **`GET /health`** in the device browser — if that fails, the container isn’t serving Node yet.
 
 ## Environment
 

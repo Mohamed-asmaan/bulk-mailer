@@ -20,12 +20,19 @@ const mongoose = require("mongoose");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Before routes and express.json(). OPTIONS needed for browser preflight on POST + JSON.
+// Before routes and express.json(). No cookies on this POST — omit credentials:true (fewer Safari / mobile quirks).
 app.use(
   cors({
-    origin: "https://bulk-mailer-seven-mu.vercel.app",
+    origin: [
+      "https://bulk-mailer-seven-mu.vercel.app",
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+    ],
     methods: ["GET", "POST", "OPTIONS"],
-    credentials: true,
+    allowedHeaders: ["Content-Type", "Accept", "Authorization", "X-Requested-With"],
+    credentials: false,
+    optionsSuccessStatus: 204,
+    maxAge: 86400,
   }),
 );
 app.use(express.json());
