@@ -4,7 +4,11 @@ import './App.css'
 import { useState } from 'react'
 import * as XLSX from "xlsx"
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '')
+const RAILWAY_API_ORIGIN = 'https://bulk-mailer-production-c860.up.railway.app'
+const API_BASE = (
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD ? RAILWAY_API_ORIGIN : 'http://localhost:5000')
+).replace(/\/$/, '')
 
 function App() {
 
