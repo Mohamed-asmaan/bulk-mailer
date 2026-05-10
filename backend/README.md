@@ -13,7 +13,9 @@ npm start      # listens on PORT (Railway) or 5000 locally
 
 ## CORS
 
-The API sets **`Access-Control-Allow-Origin`** only for **`https://bulk-mailer-seven-mu.vercel.app`** and local Vite (`http://localhost:5173`, `http://127.0.0.1:5173`). **`OPTIONS`** preflight replies with **204** before routes run (manual middleware, tuned for Express 5). Override with **`FRONTEND_ORIGINS`** (comma‑separated) if the UI hostname changes (e.g. another Vercel preview domain).
+The API sets **`Access-Control-Allow-Origin`** for **`https://bulk-mailer-seven-mu.vercel.app`** (and that hostname via URL parse), plus local Vite. **`OPTIONS /sendmail`** is handled explicitly; other **`OPTIONS`** return **204** from global middleware.
+
+If **`FRONTEND_ORIGINS`** on Railway is set but wrong or parses to **no tokens**, older builds used an **empty allow-list** so no CORS header was sent. Either **remove** the variable or list real origins comma‑separated. Startup logs include **`CORS allow-list (...)`** so you can verify the deployed list.
 
 ## Environment
 

@@ -25,14 +25,31 @@ const DEFAULT_FRONTEND_ORIGINS = [
   "http://127.0.0.1:5173",
 ];
 
-const ALLOWED_ORIGINS = process.env.FRONTEND_ORIGINS
-  ? process.env.FRONTEND_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean)
-  : DEFAULT_FRONTEND_ORIGINS;
+/** If FRONTEND_ORIGINS exists but parses to [], no origin matched — browsers get zero CORS headers. Fallback to defaults. */
+const ALLOWED_ORIGINS = (() => {
+  const fromEnv =
+    typeof process.env.FRONTEND_ORIGINS === "string"
+      ? process.env.FRONTEND_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean)
+      : [];
+  return fromEnv.length > 0 ? fromEnv : DEFAULT_FRONTEND_ORIGINS;
+})();
 
-/** Explicit CORS for Express 5 (avoids preflight quirks with the `cors` package + path-to-regexp). */
-function allowlistCors(req, res, next) {
+console.log(`CORS allow-list (${ALLOWED_ORIGINS.length}): ${ALLOWED_ORIGINS.join(" | ")}`);
+
+function isAllowedOrigin(origin) {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  try {
+    const url = new URL(origin);
+    return url.protocol === "https:" && url.hostname === "bulk-mailer-seven-mu.vercel.app";
+  } catch {
+    return false;
+  }
+}
+
+function applyCorsHeaders(req, res) {
   const origin = req.headers.origin;
-  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+  if (origin && isAllowedOrigin(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
   }
@@ -42,10 +59,21 @@ function allowlistCors(req, res, next) {
     "Content-Type, Accept, Authorization, X-Requested-With",
   );
   res.setHeader("Access-Control-Max-Age", "86400");
+}
+
+/** Global CORS for Express 5 (no `cors` package — avoids OPTIONS / path‑regexp quirks). */
+function allowlistCors(req, res, next) {
+  applyCorsHeaders(req, res);
   if (req.method === "OPTIONS") {
     return res.status(204).end();
   }
   next();
+}
+
+/** Dedicated preflight route so `/sendmail` always returns CORS headers (some proxies/cache paths differ). */
+function optionsSendmail(_req, res) {
+  applyCorsHeaders(_req, res);
+  return res.status(204).end();
 }
 
 app.use(allowlistCors);
@@ -94,6 +122,8 @@ mongoose.connect(mongoUri)
 app.get("/health", (_req, res) => {
   res.type("text").send("ok");
 });
+
+app.options("/sendmail", optionsSendmail);
 
 app.post("/sendmail", async (req, res) => {
 
