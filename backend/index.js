@@ -18,7 +18,10 @@ const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+
+const parsedRailwayPort = Number.parseInt(process.env.PORT, 10);
+const LISTEN_PORT =
+  Number.isFinite(parsedRailwayPort) && parsedRailwayPort > 0 ? parsedRailwayPort : 5000;
 
 // Before routes and express.json(). No cookies on this POST — omit credentials:true (fewer Safari / mobile quirks).
 app.use(
@@ -139,6 +142,11 @@ app.post("/sendmail", async (req, res) => {
 
 });
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("Server running");
+app.listen(LISTEN_PORT, "0.0.0.0", () => {
+  const usedFallback = !(
+    Number.isFinite(parsedRailwayPort) && parsedRailwayPort > 0
+  );
+  console.log(
+    `HTTP listening on 0.0.0.0:${LISTEN_PORT} (process.env.PORT=${JSON.stringify(process.env.PORT)}${usedFallback ? "; using fallback 5000" : ""})`,
+  );
 });

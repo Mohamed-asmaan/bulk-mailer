@@ -21,6 +21,14 @@ Vercel: **`VITE_API_URL=https://bulk-mailer-production-c860.up.railway.app`** or
 
 If Network shows **no response headers** for **`sendmail`**, confirm **two** entries exist (**`OPTIONS`** then **`POST`**) and open **`GET /health`** in the device browser — if that fails, the container isn’t serving Node yet.
 
+### Railway **`502`** / HTTP logs **`upstream connection refused`**
+
+Railway reached your service but nothing accepted TCP on the port it probes — **not** a CORS bug. Typical causes:
+
+1. **Process exited on boot** — e.g. missing **`MONGODB_URI`** → this app calls **`process.exit(1)`** before **`listen()`**. Fix variables on the **same** service → **Deploy logs** until you see **`HTTP listening on 0.0.0.0:…`**.
+2. **Wrong start / root directory** — service must run **`npm start`** from **`backend/`** (folder that contains **`package.json`** + **`index.js`**).
+3. **Rare:** Public networking mapped to port **5000** in UI while **`PORT`** differs — the app listens on **`process.env.PORT`** (preferred) or falls back to **5000**. Align **Networking → port** with what the process listens on (check deploy log line above).
+
 ## Environment
 
 Copy [.env.example](.env.example) to `.env`. Never commit `.env`.
