@@ -1,8 +1,17 @@
 # bulk-mailer
 
+**Repository:** [github.com/Mohamed-asmaan/bulk-mailer](https://github.com/Mohamed-asmaan/bulk-mailer)
+
 A small MERN-style app (**Bulk Mail**) for composing a message, loading recipient emails from an Excel file (first column, header `A`), and sending mail through a Node backend that reads SMTP credentials from MongoDB.
 
-**Live frontend (Vercel):** [https://bulk-mailer-seven-mu.vercel.app/](https://bulk-mailer-seven-mu.vercel.app/)
+## Deployed app
+
+| | URL |
+|---|-----|
+| **Frontend (Vercel)** | [https://bulk-mailer-seven-mu.vercel.app/](https://bulk-mailer-seven-mu.vercel.app/) |
+| **Backend API (Railway)** | [https://bulk-mailer-production-c860.up.railway.app](https://bulk-mailer-production-c860.up.railway.app) |
+
+Local development uses the API on port **5000** (`http://localhost:5000`). Railway injects `PORT` at runtime; the server reads `process.env.PORT` and falls back to **5000** when unset.
 
 ## What’s inside
 
@@ -54,7 +63,7 @@ Serve the `frontend/dist` output with any static host (this project’s UI is de
 ### Vercel (frontend)
 
 1. Build command: `cd frontend && npm install && npm run build` (or set the project **Root Directory** to `frontend` and use `npm run build`).
-2. Add an environment variable **`VITE_API_URL`** = your public Railway (or other) API origin, **no trailing slash**, e.g. `https://your-service.up.railway.app`. Vite bakes this in at build time, then redeploy.
+2. Add **`VITE_API_URL`** = your public API origin, **no trailing slash**. For this project’s Railway service use `https://bulk-mailer-production-c860.up.railway.app`. Vite bakes this in at build time, then redeploy. (If unset at build time, the app falls back to the same Railway origin in production builds; local dev still defaults to `http://localhost:5000`.)
 3. Copy `frontend/.env.example` to `frontend/.env` locally if you want the same override during `npm run dev`.
 
 ### Railway (backend)

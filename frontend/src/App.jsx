@@ -154,6 +154,7 @@ function App() {
                   onChange={handleFile}
                   type='file'
                   id='fileInput'
+                  accept='.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel'
                   className='hidden'
                 />
 
