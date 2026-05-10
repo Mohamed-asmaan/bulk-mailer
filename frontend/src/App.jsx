@@ -5,10 +5,21 @@ import { useState } from 'react'
 import * as XLSX from "xlsx"
 
 const RAILWAY_API_ORIGIN = 'https://bulk-mailer-production-c860.up.railway.app'
-const API_BASE = (
-  import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD ? RAILWAY_API_ORIGIN : 'http://localhost:5000')
-).replace(/\/$/, '')
+/** Dev: vite.config.js proxies /sendmail and /health → http://localhost:5000 (same-origin, avoids CORS clutter in Network). Prod: Railway / VITE_API_URL. */
+const API_BASE = import.meta.env.DEV
+  ? ''
+  : (
+      import.meta.env.VITE_API_URL ||
+      (import.meta.env.PROD ? RAILWAY_API_ORIGIN : 'http://localhost:5000')
+    ).replace(/\/$/, '')
+
+/** Ask intermediaries not to reuse cached responses — clearer DevTools Headers / fewer “provisional” quirks. */
+const API_AXIOS_CONFIG = {
+  headers: {
+    'Cache-Control': 'no-cache',
+    Pragma: 'no-cache',
+  },
+}
 
 function App() {
 
@@ -25,10 +36,14 @@ function App() {
   function send() {
     setstatus(true)
     axios
-      .post(`${API_BASE}/sendmail`, {
-        msg: msg,
-        emailList: emailList,
-      })
+      .post(
+        `${API_BASE}/sendmail`,
+        {
+          msg: msg,
+          emailList: emailList,
+        },
+        API_AXIOS_CONFIG,
+      )
       .then((res) => {
         if (res.data === true) {
           alert("Email sent successfully")

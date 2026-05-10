@@ -15,7 +15,7 @@ MongoDB credentials are configured on the **backend** (`MONGODB_URI` + `bulkmail
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173 — API defaults to http://localhost:5000
+npm run dev      # http://localhost:5173 — same-origin `/sendmail` proxies to backend :5000 (see vite.config.js)
 npm run build    # output: dist/
 npm run preview  # test production bundle locally
 ```
