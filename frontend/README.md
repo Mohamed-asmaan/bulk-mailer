@@ -1,16 +1,28 @@
-# React + Vite
+# Frontend (Bulk Mail)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite UI: message editor, `.xlsx` / `.xls` upload (first sheet, column **A** as emails), `POST /sendmail` via Axios.
 
-Currently, two official plugins are available:
+## Scripts
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev      # http://localhost:5173 — API defaults to http://localhost:5000
+npm run build    # output: dist/
+npm run preview  # test production bundle locally
+```
 
-## React Compiler
+## Environment
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Copy [.env.example](.env.example) to `.env` for local overrides.
+- **`VITE_API_URL`** — API origin, **no trailing slash**. Dev without `.env`: `http://localhost:5000`.
+- Production builds load [`.env.production`](.env.production) (baked into the bundle). Override in your host’s env (e.g. Vercel) if the API URL changes.
 
-## Expanding the ESLint configuration
+## Deploy (Vercel)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Root Directory:** `frontend` (optional if build command cd’s here).
+- **Build:** `npm install && npm run build`
+- **`VITE_API_URL`:** Optional if `.env.production` matches your API; set in the dashboard to override without code changes.
+
+## Excel
+
+First sheet; cells in column **A** are treated as recipient addresses.
