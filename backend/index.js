@@ -6,14 +6,16 @@ const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
 
 const app = express();
-const PORT = 5000;
+const PORT = Number(process.env.PORT) || 5000;
 
 app.use(cors());
 app.use(express.json());
 
 const mongoUri = process.env.MONGODB_URI;
 if (!mongoUri) {
-  console.error("Missing MONGODB_URI. Copy backend/.env.example to backend/.env and set your connection string.");
+  console.error(
+    "Missing MONGODB_URI. Local: copy backend/.env.example to backend/.env. Railway: open the service → Variables → add MONGODB_URI with your Atlas connection string."
+  );
   process.exit(1);
 }
 
@@ -72,6 +74,6 @@ app.post("/sendmail", async (req, res) => {
 
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server listening on port ${PORT}`);
 });

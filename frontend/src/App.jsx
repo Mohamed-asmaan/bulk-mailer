@@ -4,6 +4,8 @@ import './App.css'
 import { useState } from 'react'
 import * as XLSX from "xlsx"
 
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '')
+
 function App() {
 
   const [msg, setmsg] = useState("")
@@ -18,7 +20,7 @@ function App() {
 
   function send() {
     setstatus(true)
-    axios.post("http://localhost:5000/sendmail", {
+    axios.post(`${API_BASE}/sendmail`, {
       msg: msg,
       emailList: emailList
     }).then((data) => {
