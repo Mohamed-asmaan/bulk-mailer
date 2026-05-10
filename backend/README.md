@@ -11,6 +11,10 @@ npm install
 npm start      # listens on PORT (Railway) or 5000 locally
 ```
 
+## CORS
+
+The API allows **`https://bulk-mailer-seven-mu.vercel.app`** and local Vite (`http://localhost:5173`, `http://127.0.0.1:5173`) by default. Override with **`FRONTEND_ORIGINS`** (comma‑separated) on Railway or in `.env` if you deploy the UI elsewhere.
+
 ## Environment
 
 Copy [.env.example](.env.example) to `.env`. Never commit `.env`.

@@ -20,7 +20,29 @@ const mongoose = require("mongoose");
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 
-app.use(cors());
+const DEFAULT_FRONTEND_ORIGINS = [
+  "https://bulk-mailer-seven-mu.vercel.app",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+];
+
+const ALLOWED_ORIGINS = process.env.FRONTEND_ORIGINS
+  ? process.env.FRONTEND_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean)
+  : DEFAULT_FRONTEND_ORIGINS;
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin) return callback(null, true);
+    return callback(null, ALLOWED_ORIGINS.includes(origin));
+  },
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+
 app.use(express.json());
 
 const MONGO_URI_ENV_KEYS = ["MONGODB_URI", "DATABASE_URL", "MONGO_URL", "MONGODB_URL"];

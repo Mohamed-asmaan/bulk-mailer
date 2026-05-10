@@ -24,18 +24,29 @@ function App() {
 
   function send() {
     setstatus(true)
-    axios.post(`${API_BASE}/sendmail`, {
-      msg: msg,
-      emailList: emailList
-    }).then((data) => {
-      if (data.data === true) {
-        alert("Email sent successfully")
-        setstatus(false)
-      }
-      else {
-        alert("failed")
-      }
-    })
+    axios
+      .post(`${API_BASE}/sendmail`, {
+        msg: msg,
+        emailList: emailList,
+      })
+      .then((res) => {
+        if (res.data === true) {
+          alert("Email sent successfully")
+        } else {
+          alert("Send failed — check backend logs.")
+        }
+      })
+      .catch((err) => {
+        console.error(err)
+        const isNetwork =
+          err.code === "ERR_NETWORK" || err.message?.toLowerCase().includes("network")
+        alert(
+          isNetwork
+            ? "Cannot reach API (blocked by browser or backend down — check CORS and Railway)."
+            : "Request failed: " + (err.response?.data?.message || err.message || "unknown"),
+        )
+      })
+      .finally(() => setstatus(false))
   }
 
   function handleFile(evt) {
