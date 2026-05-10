@@ -55,9 +55,9 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    console.error("Blocked by CORS:", origin);
+    console.warn("Blocked by CORS:", origin);
 
-    return callback(new Error(`CORS blocked for origin: ${origin}`));
+    return callback(null, false);
   },
 
   methods: ["GET", "POST", "OPTIONS"],
@@ -67,15 +67,19 @@ const corsOptions = {
   credentials: true,
 
   optionsSuccessStatus: 204,
-
-  maxAge: 86400,
 };
 
-// Order: CORS first so preflight never hits JSON/body parsers or route logic without headers.
-app.use(cors(corsOptions));
+// Register /sendmail preflight BEFORE app.use(cors) so OPTIONS runs this stack first (log + CORS headers). Avoid app.options(.*) — can break Express path-to-regexp on some deploys.
+app.options(
+  "/sendmail",
+  (req, _res, next) => {
+    console.log("OPTIONS HIT");
+    next();
+  },
+  cors(corsOptions),
+);
 
-// Explicit OPTIONS routing for proxies/CDNs (Railway/Vercel). Express 5: bare "*" path crashes path-to-regexp — use RegExp.
-app.options(/.*/, cors(corsOptions));
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || "512kb" }));
 
@@ -337,18 +341,13 @@ app.post(
 // eslint-disable-next-line no-unused-vars
 function centralErrorHandler(err, req, res, _next) {
   console.error("[error]", req.method, req.path, err?.code || "", err?.message || err);
-  const corsBlocked =
-    typeof err.message === "string" && err.message.startsWith("CORS blocked");
-
   let status =
     typeof err.status === "number"
       ? err.status
       : typeof err.statusCode === "number"
         ? err.statusCode
-        : corsBlocked
-          ? 403
-          : 500;
-  let code = err.code || (corsBlocked ? "CORS_BLOCKED" : status >= 500 ? "INTERNAL" : "ERROR");
+        : 500;
+  let code = err.code || (status >= 500 ? "INTERNAL" : "ERROR");
   const explicitStatus = typeof err.status === "number" || typeof err.statusCode === "number";
   if (
     !explicitStatus &&

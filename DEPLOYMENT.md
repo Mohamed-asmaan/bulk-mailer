@@ -8,7 +8,7 @@ This follows the hardened Express + Vite stack in this repo (see `backend/index.
 |--------|--------|-------------------|
 | `app.listen()` before MongoDB connected | Routes served while DB down; flaky `/sendmail` | `await mongoose.connect()` before registering `/sendmail` and `listen()` |
 | 404/error middleware mounted before `/sendmail` | `POST /sendmail` never reached | `/sendmail` registered before 404 and central error handler |
-| CORS preflight / origin | Railway or browser oddities | `app.use(cors)` + **`app.options(/.*/, cors)`** (Express 5 cannot use path `'*'`) + explicit allow-list; **403** `CORS_BLOCKED` on bad origin |
+| CORS preflight / origin | Bad paths or `callback(Error)` blowing up proxies | **`app.options("/sendmail")`** registered **before** `app.use(cors)`, with **`callback(null, false)`** (never **`callback(Error)`**) for denied origins |
 | No `trust proxy` on Railway | Rate limit keyed badly; weird client IP behavior | `app.set('trust proxy', …)` |
 | No request validation | 500 / odd errors on bad payloads | `validateSendMailBody` → 400 JSON |
 | Sequential `sendMail` without timeout | Hung requests → gateway 502/timeouts | `withTimeout()` per message + configurable SMTP timeouts |
