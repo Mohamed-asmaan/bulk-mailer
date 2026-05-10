@@ -20,8 +20,11 @@ const mongoose = require("mongoose");
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 
-// Production frontend only; local Vite/dev hosts need backend/.env → FRONTEND_ORIGINS (see .env.example).
-const DEFAULT_FRONTEND_ORIGINS = ["https://bulk-mailer-seven-mu.vercel.app"];
+const DEFAULT_FRONTEND_ORIGINS = [
+  "https://bulk-mailer-seven-mu.vercel.app",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+];
 
 const ALLOWED_ORIGINS = process.env.FRONTEND_ORIGINS
   ? process.env.FRONTEND_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean)
@@ -37,7 +40,8 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
-// Express 5 path-to-regexp does not accept "*" as a route; `cors()` already answers OPTIONS preflight when mounted with `use`.
+// Express 5 / path-to-regexp v8+: do not use app.options('*', …) — it crashes at startup.
+// `cors()` handles OPTIONS preflight for matching requests.
 app.use(cors(corsOptions));
 
 app.use(express.json());
