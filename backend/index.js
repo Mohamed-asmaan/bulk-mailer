@@ -39,16 +39,6 @@ app.use(
   }),
 );
 
-/** API routes: discourage caching so DevTools / CDNs show real response headers on each request. */
-app.use((req, res, next) => {
-  const p = req.path || "";
-  if (p === "/sendmail" || p === "/health") {
-    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-    res.setHeader("Pragma", "no-cache");
-  }
-  next();
-});
-
 app.use(express.json());
 
 const MONGO_URI_ENV_KEYS = ["MONGODB_URI", "DATABASE_URL", "MONGO_URL", "MONGODB_URL"];

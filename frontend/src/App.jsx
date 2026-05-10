@@ -13,14 +13,6 @@ const API_BASE = import.meta.env.DEV
       (import.meta.env.PROD ? RAILWAY_API_ORIGIN : 'http://localhost:5000')
     ).replace(/\/$/, '')
 
-/** Ask intermediaries not to reuse cached responses — clearer DevTools Headers / fewer “provisional” quirks. */
-const API_AXIOS_CONFIG = {
-  headers: {
-    'Cache-Control': 'no-cache',
-    Pragma: 'no-cache',
-  },
-}
-
 function App() {
 
   const [msg, setmsg] = useState("")
@@ -35,16 +27,7 @@ function App() {
 
   function send() {
     setstatus(true)
-    axios
-      .request({
-        method: 'POST',
-        url: `${API_BASE}/sendmail`,
-        data: { msg, emailList },
-        headers: {
-          'Content-Type': 'application/json',
-          ...API_AXIOS_CONFIG.headers,
-        },
-      })
+    axios.post(`${API_BASE}/sendmail`, { msg, emailList })
       .then((res) => {
         if (res.data === true) {
           alert("Email sent successfully")
