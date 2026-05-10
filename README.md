@@ -88,6 +88,8 @@ Railway never reads `backend/.env` from the repo. The server only reads **`proce
 
 The backend connects with `mongoose.connect(...)` using the first non-empty value from those variables (see `resolveMongoUri()` in `backend/index.js`).
 
+If the server still exits immediately, check the log line **`Diagnostics (values hidden): …`**: if every name shows **`missing`**, that Railway **service** still does not receive those variables (wrong service tab, typo in the name, or a shared variable not linked to this service). Paste the URI as a normal variable on the backend service if unsure.
+
 ## Configuration notes
 
 - **MongoDB**: Copy `backend/.env.example` to `backend/.env` for local development. On Railway, set the **`MONGODB_URI`** variable in the dashboard. Never commit `.env`.

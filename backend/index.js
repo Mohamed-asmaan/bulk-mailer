@@ -14,9 +14,10 @@ const PORT = Number(process.env.PORT) || 5000;
 app.use(cors());
 app.use(express.json());
 
+const MONGO_URI_ENV_KEYS = ["MONGODB_URI", "DATABASE_URL", "MONGO_URL", "MONGODB_URL"];
+
 function resolveMongoUri() {
-  const keys = ["MONGODB_URI", "DATABASE_URL", "MONGO_URL", "MONGODB_URL"];
-  for (const key of keys) {
+  for (const key of MONGO_URI_ENV_KEYS) {
     const value = process.env[key]?.trim();
     if (value) return { uri: value, key };
   }
@@ -25,11 +26,15 @@ function resolveMongoUri() {
 
 const { uri: mongoUri, key: mongoEnvKey } = resolveMongoUri();
 if (!mongoUri) {
+  const flags = MONGO_URI_ENV_KEYS
+    .map((k) => `${k}=${process.env[k]?.trim() ? "set" : "missing"}`)
+    .join(", ");
   console.error(
     "No MongoDB connection string found. Set one of these in Railway → Service → Variables (exact names): " +
       "MONGODB_URI, DATABASE_URL, MONGO_URL, or MONGODB_URL. " +
       "Local: copy backend/.env.example to backend/.env and set MONGODB_URI."
   );
+  console.error(`Diagnostics (values hidden): ${flags}`);
   process.exit(1);
 }
 
