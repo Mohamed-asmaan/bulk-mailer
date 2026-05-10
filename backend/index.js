@@ -36,41 +36,47 @@ const SMTP_PER_MESSAGE_TIMEOUT_MS =
   Number.parseInt(process.env.SMTP_PER_MESSAGE_TIMEOUT_MS || "90000", 10) || 90000;
 const SMTP_SEND_GAP_MS = Number.parseInt(process.env.SMTP_SEND_GAP_MS || "200", 10) || 0;
 
-function buildAllowedOrigins() {
-  const defaults = [
-    "https://bulk-mailer-seven-mu.vercel.app",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-  ];
-  const extra =
-    process.env.FRONTEND_ORIGINS?.split(",")
-      .map((s) => s.trim().replace(/\/$/, ""))
-      .filter(Boolean) ?? [];
-  return [...defaults, ...extra];
-}
+const allowedOrigins = [
+  "https://bulk-mailer-seven-mu.vercel.app",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  ...(process.env.FRONTEND_ORIGINS?.split(",")
+    .map((s) => s.trim().replace(/\/$/, ""))
+    .filter(Boolean) ?? []),
+];
 
 const corsOptions = {
   origin(origin, callback) {
-    const allowed = buildAllowedOrigins();
     if (!origin) {
       return callback(null, true);
     }
-    if (allowed.includes(origin)) {
-      return callback(null, origin);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
     }
-    console.warn("[cors] blocked Origin:", origin);
-    // Use (null, false) — passing Error here can explode the CORS middleware and take down responses.
-    return callback(null, false);
+
+    console.error("Blocked by CORS:", origin);
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
+
   methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Accept", "Authorization", "X-Requested-With"],
+
+  allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With"],
+
   credentials: true,
+
   optionsSuccessStatus: 204,
+
   maxAge: 86400,
 };
 
 // Order: CORS first so preflight never hits JSON/body parsers or route logic without headers.
 app.use(cors(corsOptions));
+
+// Explicit OPTIONS routing for proxies/CDNs (Railway/Vercel). Express 5: bare "*" path crashes path-to-regexp — use RegExp.
+app.options(/.*/, cors(corsOptions));
+
 app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || "512kb" }));
 
 function mongoEnvStatus(key) {
@@ -224,7 +230,7 @@ app.get("/health/diagnostics", async (req, res, next) => {
         defaultDbFromUri: defaultName ?? null,
         credentialsDb: process.env.MONGO_DB_NAME?.trim() ?? null,
       },
-      corsOriginsConfigured: buildAllowedOrigins(),
+      corsOriginsConfigured: [...allowedOrigins],
       thresholds: {
         maxRecipients: MAX_RECIPIENTS,
         maxMessageChars: MAX_MESSAGE_CHARS,
@@ -319,17 +325,30 @@ async function sendMailHandler(req, res, next) {
   }
 }
 
+// Registered before bootstrap(); HTTP only opens after mongo.connect in bootstrap(), so this route is unreachable until Mongo is ready.
+app.post(
+  "/sendmail",
+  sendMailLimiter,
+  validateSendMailBody,
+  (req, res, next) => Promise.resolve(sendMailHandler(req, res, next)).catch(next),
+);
+
 /** Central Express error middleware — catches async rejections routed via next(err). Prevents stray 502s from unhandled async failures. */
 // eslint-disable-next-line no-unused-vars
 function centralErrorHandler(err, req, res, _next) {
   console.error("[error]", req.method, req.path, err?.code || "", err?.message || err);
+  const corsBlocked =
+    typeof err.message === "string" && err.message.startsWith("CORS blocked");
+
   let status =
     typeof err.status === "number"
       ? err.status
       : typeof err.statusCode === "number"
         ? err.statusCode
-        : 500;
-  let code = err.code || (status >= 500 ? "INTERNAL" : "ERROR");
+        : corsBlocked
+          ? 403
+          : 500;
+  let code = err.code || (corsBlocked ? "CORS_BLOCKED" : status >= 500 ? "INTERNAL" : "ERROR");
   const explicitStatus = typeof err.status === "number" || typeof err.statusCode === "number";
   if (
     !explicitStatus &&
@@ -382,13 +401,6 @@ async function bootstrap() {
     console.error("[mongo] connect failed:", err?.message || err);
     process.exit(1);
   }
-
-  app.post(
-    "/sendmail",
-    sendMailLimiter,
-    validateSendMailBody,
-    (req, res, next) => Promise.resolve(sendMailHandler(req, res, next)).catch(next),
-  );
 
   app.use((req, res) => {
     res.status(404).json({ ok: false, code: "NOT_FOUND", message: `${req.method} ${req.path} not found` });

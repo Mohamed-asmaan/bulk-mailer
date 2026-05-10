@@ -8,7 +8,7 @@ This follows the hardened Express + Vite stack in this repo (see `backend/index.
 |--------|--------|-------------------|
 | `app.listen()` before MongoDB connected | Routes served while DB down; flaky `/sendmail` | `await mongoose.connect()` before registering `/sendmail` and `listen()` |
 | 404/error middleware mounted before `/sendmail` | `POST /sendmail` never reached | `/sendmail` registered before 404 and central error handler |
-| CORS origin callback threw `Error` | Could break CORS layer | Deny with `callback(null, false)` |
+| CORS preflight / origin | Railway or browser oddities | `app.use(cors)` + **`app.options(/.*/, cors)`** (Express 5 cannot use path `'*'`) + explicit allow-list; **403** `CORS_BLOCKED` on bad origin |
 | No `trust proxy` on Railway | Rate limit keyed badly; weird client IP behavior | `app.set('trust proxy', …)` |
 | No request validation | 500 / odd errors on bad payloads | `validateSendMailBody` → 400 JSON |
 | Sequential `sendMail` without timeout | Hung requests → gateway 502/timeouts | `withTimeout()` per message + configurable SMTP timeouts |
@@ -76,7 +76,13 @@ Operational / tuning:
 
 1. `GET {{BASE}}/health` → `200`, body `ok`.
 2. `GET {{BASE}}/health/diagnostics` → JSON without secrets.
-3. `POST {{BASE}}/sendmail` with raw JSON `{ "msg": "hello", "emailList": ["you@example.com"] }`.
+3. `POST {{BASE}}/sendmail`:
+   - **Body** → **raw** → **JSON** (not “none”):
+
+     `{"msg":"hello","emailList":["you@example.com"]}`
+
+   - **Headers:** `Content-Type: application/json`  
+   Without this, `express.json()` won’t parse the body and validation returns **400**.
 
 ## Frontend testing
 

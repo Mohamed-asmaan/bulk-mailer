@@ -48,6 +48,16 @@ function App() {
   }
 
   function send() {
+    if (!msg.trim()) {
+      alert("Message is empty")
+      return
+    }
+
+    if (emailList.length === 0) {
+      alert("Upload Excel file first")
+      return
+    }
+
     setstatus(true)
     axios
       .post(`${API_BASE}/sendmail`, { msg, emailList }, { timeout: API_TIMEOUT_MS })
