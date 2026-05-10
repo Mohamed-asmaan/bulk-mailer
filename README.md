@@ -63,8 +63,8 @@ Serve the `frontend/dist` output with any static host (this project’s UI is de
 ### Vercel (frontend)
 
 1. Build command: `cd frontend && npm install && npm run build` (or set the project **Root Directory** to `frontend` and use `npm run build`).
-2. Add **`VITE_API_URL`** = your public API origin, **no trailing slash**. For this project’s Railway service use `https://bulk-mailer-production-c860.up.railway.app`. Vite bakes this in at build time, then redeploy. (If unset at build time, the app falls back to the same Railway origin in production builds; local dev still defaults to `http://localhost:5000`.)
-3. Copy `frontend/.env.example` to `frontend/.env` locally if you want the same override during `npm run dev`.
+2. **`VITE_API_URL`** is set for production builds in **`frontend/.env.production`** (`https://bulk-mailer-production-c860.up.railway.app`, no trailing slash), so Vercel normally does **not** need a dashboard variable. To point at a different API, add **`VITE_API_URL`** under Vercel → Project → Settings → Environment Variables (Production); it overrides the file. `npm run dev` still defaults to `http://localhost:5000` unless you use `frontend/.env` (see `frontend/.env.example`).
+3. After changing env or API URL, trigger a **new deployment** so Vite rebuilds with the updated value.
 
 ### Railway (backend)
 
