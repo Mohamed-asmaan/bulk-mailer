@@ -89,6 +89,12 @@ mongoose.connect(mongoUri)
         ? `; credentials read from override MONGO_DB_NAME="${process.env.MONGO_DB_NAME.trim()}"`
         : "",
     );
+    if (!process.env.MONGO_DB_NAME?.trim() && defaultName === "test") {
+      console.warn(
+        'MongoDB default database is "test" (URI has no /dbname before ?). If `bulkmail` lives elsewhere (e.g. passkey), ' +
+          'use ...mongodb.net/passkey?... in MONGODB_URI or set MONGO_DB_NAME=passkey.',
+      );
+    }
   })
   .catch((err) => {
     console.error("MongoDB connection failed:", err?.message || err);
