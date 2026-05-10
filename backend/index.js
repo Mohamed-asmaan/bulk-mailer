@@ -23,21 +23,21 @@ const parsedRailwayPort = Number.parseInt(process.env.PORT, 10);
 const LISTEN_PORT =
   Number.isFinite(parsedRailwayPort) && parsedRailwayPort > 0 ? parsedRailwayPort : 5000;
 
-// Before routes and express.json(). No cookies on this POST — omit credentials:true (fewer Safari / mobile quirks).
-app.use(
-  cors({
-    origin: [
-      "https://bulk-mailer-seven-mu.vercel.app",
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-    ],
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Accept", "Authorization", "X-Requested-With"],
-    credentials: false,
-    optionsSuccessStatus: 204,
-    maxAge: 86400,
-  }),
-);
+const corsOptions = {
+  origin: [
+    "https://bulk-mailer-seven-mu.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+  ],
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Accept", "Authorization", "X-Requested-With"],
+  credentials: true,
+  optionsSuccessStatus: 204,
+  maxAge: 86400,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(express.json());
 
