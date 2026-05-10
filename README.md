@@ -88,7 +88,10 @@ Railway never reads `backend/.env` from the repo. The server only reads **`proce
 
 The backend connects with `mongoose.connect(...)` using the first non-empty value from those variables (see `resolveMongoUri()` in `backend/index.js`).
 
-If the server still exits immediately, check the log line **`Diagnostics (values hidden): …`**: if every name shows **`missing`**, that Railway **service** still does not receive those variables (wrong service tab, typo in the name, or a shared variable not linked to this service). Paste the URI as a normal variable on the backend service if unsure.
+If the server still exits immediately, check the log line **`Diagnostics (values hidden): …`**:
+
+- **`missing`** for all four names → Railway is **not** passing any of those variables into **this** deploy. Common causes: variable added on the **wrong service** (open the service whose logs you read; the first line may show **`Railway: service=…`** after redeploy — that name must match the service where you saved `MONGODB_URI`), variable left in **edit** mode without clicking **✓**, or variables only on another **environment** (e.g. preview vs production). Fix on that exact service → **Variables** → save → **Redeploy**.
+- **`empty`** for `MONGODB_URI` → the key exists but the value is blank or whitespace; re-paste the full Atlas URI and save.
 
 #### After `MONGODB_URI` is set — read the *next* log line
 
