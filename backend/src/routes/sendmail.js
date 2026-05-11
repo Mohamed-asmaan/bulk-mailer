@@ -39,7 +39,7 @@ async function sendMailHandler(req, res, next) {
 
   const smtpUser = userdata.user.trim();
   const smtpPass = userdata.pass.replace(/\s+/g, "");
-  const transporter = createSmtpTransport(smtpUser, smtpPass);
+  const transporter = await createSmtpTransport(smtpUser, smtpPass);
 
   try {
     for (let i = 0; i < emailList.length; i++) {

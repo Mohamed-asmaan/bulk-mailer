@@ -45,7 +45,7 @@ function registerHealthRoutes(app, serverStartedAt) {
           const smtpPass = userdata.pass.replace(/\s+/g, "");
           const t0 = Date.now();
           try {
-            const transporter = createSmtpTransport(smtpUser, smtpPass);
+            const transporter = await createSmtpTransport(smtpUser, smtpPass);
             await withTimeout(transporter.verify(), config.smtpVerifyTimeoutMs, "transporter.verify");
             payload.smtpVerify = { ok: true, ms: Date.now() - t0 };
           } catch (e) {
