@@ -1,7 +1,16 @@
+const dns = require("dns");
 const mongoose = require("mongoose");
 const config = require("./config");
 const { createApp } = require("./app");
 const { centralErrorHandler } = require("./middleware/centralErrorHandler");
+
+// Force IPv4-first DNS resolution globally. Some PaaS hosts (Render free)
+// disable outbound IPv6, so an AAAA-record connect attempt to smtp.gmail.com
+// fails with ENETUNREACH before nodemailer's `family: 4` socket option helps.
+if (typeof dns.setDefaultResultOrder === "function") {
+  dns.setDefaultResultOrder("ipv4first");
+  console.log("[startup] DNS default result order: ipv4first");
+}
 
 if (process.env.RENDER || process.env.RENDER_SERVICE_NAME) {
   console.log(
