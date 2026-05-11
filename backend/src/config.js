@@ -26,22 +26,34 @@ function buildAllowedOrigins() {
   ];
 }
 
+const ALLOWED_ORIGIN_PATTERNS = [
+  /^https:\/\/[a-z0-9-]+\.vercel\.app$/i,
+  /^http:\/\/localhost(:\d+)?$/i,
+  /^http:\/\/127\.0\.0\.1(:\d+)?$/i,
+];
+
+function isOriginAllowed(origin, allowedOrigins) {
+  if (!origin) return true;
+  const normalized = origin.replace(/\/$/, "");
+  if (allowedOrigins.includes(normalized)) return true;
+  if (ALLOWED_ORIGIN_PATTERNS.some((re) => re.test(normalized))) return true;
+  return false;
+}
+
 function buildCorsOptions(allowedOrigins) {
   return {
     origin(origin, callback) {
-      if (!origin) {
-        return callback(null, true);
+      if (isOriginAllowed(origin, allowedOrigins)) {
+        return callback(null, origin || true);
       }
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, origin);
-      }
-      console.warn("Blocked by CORS:", origin);
+      console.warn("[cors] blocked origin:", JSON.stringify(origin));
       return callback(null, false);
     },
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With"],
     credentials: true,
     optionsSuccessStatus: 204,
+    maxAge: 600,
   };
 }
 

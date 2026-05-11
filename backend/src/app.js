@@ -8,16 +8,16 @@ function createApp(serverStartedAt) {
   const app = express();
   app.set("trust proxy", config.trustProxyHops);
 
-  app.options(
-    "/sendmail",
-    (req, _res, next) => {
-      console.log("OPTIONS HIT");
-      next();
-    },
-    cors(config.corsOptions),
-  );
+  const corsMiddleware = cors(config.corsOptions);
+  app.use(corsMiddleware);
+  app.use((req, res, next) => {
+    if (req.method === "OPTIONS") {
+      console.log("[cors] preflight", req.path, "origin=", req.headers.origin);
+      return res.sendStatus(204);
+    }
+    return next();
+  });
 
-  app.use(cors(config.corsOptions));
   app.use(express.json({ limit: config.jsonBodyLimit }));
 
   registerHealthRoutes(app, serverStartedAt);
