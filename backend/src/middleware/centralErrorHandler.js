@@ -18,6 +18,21 @@ function centralErrorHandler(err, req, res, _next) {
     status = 502;
     code = code === "INTERNAL" ? "SMTP_UPSTREAM" : code;
   }
+  const SMTP_NETWORK_CODES = new Set([
+    "ESOCKET",
+    "ETIMEDOUT",
+    "ETIMEOUT",
+    "ECONNECTION",
+    "ECONNREFUSED",
+    "ECONNRESET",
+    "EDNS",
+    "ENOTFOUND",
+  ]);
+  if (!explicitStatus && SMTP_NETWORK_CODES.has(String(err.code || "").toUpperCase())) {
+    console.error("[smtp] network error", err.code, err.command, err.address, err.port);
+    status = 502;
+    code = "SMTP_NETWORK";
+  }
   const clientSafe =
     status >= 500 && process.env.NODE_ENV === "production"
       ? "Server error — check server logs."
