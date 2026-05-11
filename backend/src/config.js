@@ -45,15 +45,15 @@ function buildCorsOptions(allowedOrigins) {
   };
 }
 
-const parsedRailwayPort = Number.parseInt(process.env.PORT, 10);
+const parsedHostPort = Number.parseInt(process.env.PORT, 10);
 
 module.exports = {
   MONGO_URI_ENV_KEYS,
   mongoEnvStatus,
   resolveMongoUri,
   LISTEN_PORT:
-    Number.isFinite(parsedRailwayPort) && parsedRailwayPort > 0 ? parsedRailwayPort : 5000,
-  parsedRailwayPort,
+    Number.isFinite(parsedHostPort) && parsedHostPort > 0 ? parsedHostPort : 5000,
+  parsedHostPort,
   trustProxyHops: Number.parseInt(process.env.TRUST_PROXY_HOPS || "1", 10) || 1,
   jsonBodyLimit: process.env.JSON_BODY_LIMIT || "512kb",
   MAX_MESSAGE_CHARS: Number.parseInt(process.env.MAX_MESSAGE_CHARS || "100000", 10) || 100000,

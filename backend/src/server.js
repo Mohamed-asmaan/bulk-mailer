@@ -3,12 +3,12 @@ const config = require("./config");
 const { createApp } = require("./app");
 const { centralErrorHandler } = require("./middleware/centralErrorHandler");
 
-if (process.env.RAILWAY_SERVICE_NAME || process.env.RAILWAY_PROJECT_NAME) {
+if (process.env.RENDER || process.env.RENDER_SERVICE_NAME) {
   console.log(
-    "[startup] Railway context:",
-    `service=${process.env.RAILWAY_SERVICE_NAME || "?"}`,
-    `environment=${process.env.RAILWAY_ENVIRONMENT_NAME || process.env.RAILWAY_ENVIRONMENT || "?"}`,
-    `project=${process.env.RAILWAY_PROJECT_NAME || "?"}`,
+    "[startup] Render context:",
+    `service=${process.env.RENDER_SERVICE_NAME || "?"}`,
+    `region=${process.env.RENDER_REGION || "?"}`,
+    `instance=${process.env.RENDER_INSTANCE_ID || "?"}`,
   );
 }
 
@@ -16,8 +16,8 @@ const { uri: mongoUri, key: mongoEnvKey } = config.resolveMongoUri();
 if (!mongoUri) {
   const flags = config.MONGO_URI_ENV_KEYS.map((k) => `${k}=${config.mongoEnvStatus(k)}`).join(", ");
   console.error(
-    "No MongoDB connection string found. Set one of these on the **same** Railway service that runs this deploy (Variables tab), exact names: " +
-      "MONGODB_URI, DATABASE_URL, MONGO_URL, or MONGODB_URL. Click ✓ to save, then Redeploy. " +
+    "No MongoDB connection string found. Set one of these on the **same** host service that runs this deploy (Environment / Variables tab), exact names: " +
+      "MONGODB_URI, DATABASE_URL, MONGO_URL, or MONGODB_URL. Save, then redeploy. " +
       "Local: copy backend/.env.example to backend/.env and set MONGODB_URI.",
   );
   console.error(`Diagnostics (values hidden): ${flags}`);
@@ -70,7 +70,7 @@ async function bootstrap() {
 
   app.listen(config.LISTEN_PORT, "0.0.0.0", () => {
     const usedFallback = !(
-      Number.isFinite(config.parsedRailwayPort) && config.parsedRailwayPort > 0
+      Number.isFinite(config.parsedHostPort) && config.parsedHostPort > 0
     );
     console.log(
       `[http] listening on 0.0.0.0:${config.LISTEN_PORT} PORT=${JSON.stringify(process.env.PORT)}${usedFallback ? " (fallback 5000)" : ""}`,

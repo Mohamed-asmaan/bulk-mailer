@@ -20,7 +20,7 @@ function centralErrorHandler(err, req, res, _next) {
   }
   const clientSafe =
     status >= 500 && process.env.NODE_ENV === "production"
-      ? "Server error — check Railway logs."
+      ? "Server error — check server logs."
       : err.message || "Request failed";
   if (!res.headersSent) {
     res.status(status).json({
