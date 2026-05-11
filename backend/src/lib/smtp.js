@@ -19,7 +19,7 @@ function withTimeout(promise, ms, label) {
 
 function createSmtpTransport(smtpUser, smtpPass) {
   const host = process.env.SMTP_HOST?.trim() || "smtp.gmail.com";
-  const port = Number.parseInt(process.env.SMTP_PORT || "465", 10);
+  const port = Number.parseInt(process.env.SMTP_PORT || "587", 10);
   const secureEnv = process.env.SMTP_SECURE?.trim().toLowerCase();
   const secure =
     secureEnv === "true" || secureEnv === "1"
@@ -27,12 +27,15 @@ function createSmtpTransport(smtpUser, smtpPass) {
       : secureEnv === "false" || secureEnv === "0"
         ? false
         : port === 465;
+  const familyEnv = Number.parseInt(process.env.SMTP_FAMILY || "4", 10);
+  const family = familyEnv === 6 || familyEnv === 0 ? familyEnv : 4;
 
   return nodemailer.createTransport({
     host,
     port,
     secure,
     requireTLS: !secure,
+    family,
     auth: { user: smtpUser, pass: smtpPass },
     connectionTimeout: Number.parseInt(process.env.SMTP_CONNECTION_TIMEOUT_MS || "30000", 10),
     greetingTimeout: Number.parseInt(process.env.SMTP_GREETING_TIMEOUT_MS || "30000", 10),
