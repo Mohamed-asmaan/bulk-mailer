@@ -7,7 +7,7 @@ React + Vite UI: message editor, `.xlsx` / `.xls` upload (first sheet, column **
 | | URL |
 |--|-----|
 | **This UI (Vercel)** | [https://bulk-mailer-seven-mu.vercel.app/](https://bulk-mailer-seven-mu.vercel.app/) |
-| **API (Railway)** | `https://bulk-mailer-production-c86d.up.railway.app` (no trailing slash) |
+| **API (Render)** | `https://bulk-mailer-ehdq.onrender.com` (no trailing slash) |
 
 MongoDB credentials are configured on the **backend** (`MONGODB_URI` + `bulkmail` collection); the browser never talks to MongoDB directly.
 
@@ -24,13 +24,13 @@ npm run preview  # test production bundle locally
 
 - Copy [.env.example](.env.example) to `.env` for local overrides.
 - **`VITE_API_URL`** — API origin, **no trailing slash**. Dev without `.env`: `http://localhost:5000`.
-- Production builds load [`.env.production`](.env.production), which sets `VITE_API_URL` to the Railway API above. Override in Vercel → Environment Variables if the API host changes.
+- Production builds load [`.env.production`](.env.production), which sets `VITE_API_URL` to the Render API above. Override in Vercel → Environment Variables if the API host changes.
 
 ## Deploy (Vercel)
 
 - **Root Directory:** `frontend` (optional if build command cd’s here).
 - **Build:** `npm install && npm run build`
-- **`VITE_API_URL`:** Use `https://bulk-mailer-production-c86d.up.railway.app` (no slash) — set in Project → Settings → Env *or* keep [`.env.production`](.env.production); redeploy after changes.
+- **`VITE_API_URL`:** Use `https://bulk-mailer-ehdq.onrender.com` (no slash) — set in Project → Settings → Env *or* keep [`.env.production`](.env.production); redeploy after changes.
 
 ## Excel
 

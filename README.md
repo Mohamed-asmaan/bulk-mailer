@@ -6,7 +6,7 @@ Compose a message, upload an Excel file with emails in column **A**, and send bu
 |--|------|
 | **Repo** | [github.com/Mohamed-asmaan/bulk-mailer](https://github.com/Mohamed-asmaan/bulk-mailer) |
 | **Frontend** | [bulk-mailer-seven-mu.vercel.app](https://bulk-mailer-seven-mu.vercel.app/) |
-| **API** | [bulk-mailer-production-c86d.up.railway.app](https://bulk-mailer-production-c86d.up.railway.app) |
+| **API** | [bulk-mailer-ehdq.onrender.com](https://bulk-mailer-ehdq.onrender.com) |
 
 ## Stack
 

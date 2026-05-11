@@ -13,7 +13,7 @@ export function formatApiError(err) {
   const isNetwork =
     err.code === "ERR_NETWORK" || err.message?.toLowerCase().includes("network");
   if (isNetwork) {
-    return "Cannot reach API (check CORS, Railway deploy, or your connection).";
+    return "Cannot reach API (check CORS, Render deploy, or your connection).";
   }
   const body = err.response?.data;
   const msg =
