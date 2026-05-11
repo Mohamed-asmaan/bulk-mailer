@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 const config = require("../config");
 const { credentialsDb } = require("../lib/mongo");
-const { createSmtpTransport, withTimeout } = require("../lib/smtp");
+const { withTimeout } = require("../lib/smtp");
+const { createMailer, detectProvider } = require("../lib/mailer");
 
 function registerHealthRoutes(app, serverStartedAt) {
   app.get("/health", (_req, res) => {
@@ -41,15 +42,25 @@ function registerHealthRoutes(app, serverStartedAt) {
           ? { userHint: String(userdata.user).replace(/(^.).*(@.*$)/, "$1***$2") }
           : { present: false };
         if (hasCreds) {
-          const smtpUser = userdata.user.trim();
-          const smtpPass = userdata.pass.replace(/\s+/g, "");
+          const mailUser = userdata.user.trim();
+          const mailPass = userdata.pass.replace(/\s+/g, "");
+          const provider = detectProvider(mailPass);
+          payload.mailerProvider = provider;
           const t0 = Date.now();
           try {
-            const transporter = await createSmtpTransport(smtpUser, smtpPass);
-            await withTimeout(transporter.verify(), config.smtpVerifyTimeoutMs, "transporter.verify");
-            payload.smtpVerify = { ok: true, ms: Date.now() - t0 };
+            const mailer = await createMailer(mailUser, mailPass);
+            const result = await withTimeout(
+              mailer.verify(),
+              config.smtpVerifyTimeoutMs,
+              "mailer.verify",
+            );
+            payload.mailerVerify = {
+              ok: result?.ok !== false,
+              ms: Date.now() - t0,
+              ...(result && typeof result === "object" ? result : {}),
+            };
           } catch (e) {
-            payload.smtpVerify = {
+            payload.mailerVerify = {
               ok: false,
               ms: Date.now() - t0,
               message: e?.message || String(e),

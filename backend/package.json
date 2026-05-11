@@ -17,6 +17,7 @@
     "express": "^5.2.1",
     "express-rate-limit": "^7.5.1",
     "mongoose": "^9.6.2",
-    "nodemailer": "^8.0.7"
+    "nodemailer": "^8.0.7",
+    "resend": "^6.12.3"
   }
 }

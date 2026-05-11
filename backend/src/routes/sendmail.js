@@ -1,7 +1,8 @@
 const rateLimit = require("express-rate-limit");
 const config = require("../config");
 const { credentialsDb } = require("../lib/mongo");
-const { createSmtpTransport, withTimeout, sleep } = require("../lib/smtp");
+const { withTimeout, sleep } = require("../lib/smtp");
+const { createMailer } = require("../lib/mailer");
 const { validateSendMailBody } = require("../middleware/validateSendMail");
 
 const sendMailLimiter = rateLimit({
@@ -37,31 +38,26 @@ async function sendMailHandler(req, res, next) {
     });
   }
 
-  const smtpUser = userdata.user.trim();
-  const smtpPass = userdata.pass.replace(/\s+/g, "");
-  const transporter = await createSmtpTransport(smtpUser, smtpPass);
+  const mailUser = userdata.user.trim();
+  const mailPass = userdata.pass.replace(/\s+/g, "");
+  const mailer = await createMailer(mailUser, mailPass);
 
   try {
     for (let i = 0; i < emailList.length; i++) {
       const to = emailList[i];
       await withTimeout(
-        transporter.sendMail({
-          from: smtpUser,
-          to,
-          subject: process.env.BULK_MAIL_SUBJECT || "Bulk mail",
-          text: msg,
-        }),
+        mailer.sendOne(to, msg),
         config.SMTP_PER_MESSAGE_TIMEOUT_MS,
-        `sendMail:${to}`,
+        `send:${to}`,
       );
       if (config.SMTP_SEND_GAP_MS > 0 && i < emailList.length - 1) {
         await sleep(config.SMTP_SEND_GAP_MS);
       }
     }
-    console.log("[sendmail] success", emailList.length, "sent");
+    console.log(`[sendmail] success ${emailList.length} sent via ${mailer.provider}`);
     return res.status(200).json({ ok: true, sent: emailList.length });
   } catch (err) {
-    console.error("[sendmail] SMTP failure:", err?.message || err, err?.code);
+    console.error(`[sendmail] ${mailer.provider} failure:`, err?.message || err, err?.code);
     next(err);
   }
 }
