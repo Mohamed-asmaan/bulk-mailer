@@ -115,9 +115,8 @@ export default function AdminLoginModal({ onClose, onSuccess }) {
             {submitting ? "Signing in…" : "Sign in"}
           </button>
           <p className="text-[11px] sm:text-xs text-white/40 leading-snug">
-            On the server, set <code className="text-white/70">ADMIN_USERNAME</code> and{" "}
-            <code className="text-white/70">ADMIN_PASSWORD</code> environment variables to enable
-            login.
+            Demo credentials — username <code className="text-white/70">admin</code> · password{" "}
+            <code className="text-white/70">admin123</code>.
           </p>
         </div>
       </form>

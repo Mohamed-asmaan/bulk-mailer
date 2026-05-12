@@ -2,10 +2,14 @@ const crypto = require("crypto");
 
 const DEFAULT_TTL_HOURS = 8;
 
+// Sample/demo credentials baked in so the deployed app works without server env vars.
+// ADMIN_USERNAME / ADMIN_PASSWORD env vars (if set) still override these.
+const DEMO_ADMIN_USERNAME = "admin";
+const DEMO_ADMIN_PASSWORD = "admin123";
+
 function getAdminCredentials() {
-  const username = process.env.ADMIN_USERNAME?.trim();
-  const password = process.env.ADMIN_PASSWORD;
-  if (!username || !password) return null;
+  const username = process.env.ADMIN_USERNAME?.trim() || DEMO_ADMIN_USERNAME;
+  const password = process.env.ADMIN_PASSWORD || DEMO_ADMIN_PASSWORD;
   return { username, password };
 }
 
@@ -13,7 +17,6 @@ function getSessionSecret() {
   const explicit = process.env.ADMIN_SESSION_SECRET?.trim();
   if (explicit) return explicit;
   const creds = getAdminCredentials();
-  if (!creds) return null;
   return `${creds.username}:${creds.password}:bulkmail-session-secret`;
 }
 
@@ -61,14 +64,6 @@ function timingSafeEqualStrings(a, b) {
 function login(username, password) {
   const creds = getAdminCredentials();
   const secret = getSessionSecret();
-  if (!creds || !secret) {
-    const err = new Error(
-      "Admin auth is not configured on the server (set ADMIN_USERNAME and ADMIN_PASSWORD).",
-    );
-    err.code = "ADMIN_NOT_CONFIGURED";
-    err.status = 503;
-    throw err;
-  }
   if (
     !timingSafeEqualStrings(username || "", creds.username) ||
     !timingSafeEqualStrings(password || "", creds.password)
@@ -93,14 +88,6 @@ function getTokenFromRequest(req) {
 
 function requireAdmin(req, res, next) {
   const secret = getSessionSecret();
-  if (!secret) {
-    return res.status(503).json({
-      ok: false,
-      code: "ADMIN_NOT_CONFIGURED",
-      message:
-        "Admin auth is not configured on the server (set ADMIN_USERNAME and ADMIN_PASSWORD).",
-    });
-  }
   const token = getTokenFromRequest(req);
   if (!token) {
     return res
@@ -118,7 +105,7 @@ function requireAdmin(req, res, next) {
 }
 
 function adminConfigured() {
-  return !!getAdminCredentials();
+  return true;
 }
 
 module.exports = { login, requireAdmin, adminConfigured };
