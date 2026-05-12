@@ -1,6 +1,6 @@
 # Frontend (Bulk Mail)
 
-React + Vite UI: message editor, `.xlsx` / `.xls` upload (first sheet, column **A** as emails), `POST /sendmail` via Axios.
+React + Vite UI: **subject + message editor**, `.xlsx` / `.xls` upload (first sheet, column **A** as emails), `POST /sendmail` via Axios. Inline success/failure banners (no native `alert`), and an admin **History** view backed by `POST /admin/login` + `GET /history`.
 
 ## Production URLs
 
@@ -35,3 +35,9 @@ npm run preview  # test production bundle locally
 ## Excel
 
 First sheet; cells in column **A** are treated as recipient addresses.
+
+## Admin / history
+
+- Click **History** in the top-right nav. If you are not signed in, a login modal asks for the admin username/password configured on the backend (`ADMIN_USERNAME` / `ADMIN_PASSWORD` env vars).
+- On success the API returns a short-lived bearer token stored in `localStorage` under `bulkmail.adminToken`. The token is sent on `GET /history` and `GET /admin/me`.
+- History shows the latest 50 sends (subject, status, sent/total count, provider, timestamp, recipient preview, and any error).

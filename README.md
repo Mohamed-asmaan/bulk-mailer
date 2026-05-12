@@ -1,6 +1,6 @@
 # bulk-mailer
 
-Compose a message, upload an Excel file with emails in column **A**, and send bulk mail through [Express](https://expressjs.com/) + [Nodemailer](https://nodemailer.com/). SMTP credentials are loaded from MongoDB — never committed to the repo.
+Compose a **subject + message**, upload an Excel file with emails in column **A**, and send bulk mail through [Express](https://expressjs.com/) + [Nodemailer](https://nodemailer.com/). Each send is persisted in MongoDB (`email_history`) and viewable through an admin-only **History** page (HMAC-signed bearer-token login). SMTP credentials are loaded from MongoDB — never committed to the repo.
 
 | | Live link |
 |--|------|
@@ -13,7 +13,15 @@ Compose a message, upload an Excel file with emails in column **A**, and send bu
 | Part | Technologies |
 |------|----------------|
 | [frontend/](frontend/README.md) | React (Vite), Tailwind v4, Axios, SheetJS |
-| [backend/](backend/README.md) | Express, Mongoose, Nodemailer |
+| [backend/](backend/README.md) | Express, Mongoose, Nodemailer, Resend (optional fallback) |
+
+## Features
+
+- **Compose** — subject, body, and Excel-driven recipient list with inline success/failure banners.
+- **Send** — `POST /sendmail` runs nodemailer (or Resend if the saved API key starts with `re_`), with per-message timeout and rate limiting.
+- **Persist** — every send writes a row to MongoDB collection `email_history` (subject, body preview, recipients preview, status, sent count, provider, error).
+- **Admin** — `POST /admin/login` (HMAC bearer token, configurable TTL) + `GET /history` (paginated, newest first). Frontend shows an inline login modal and a history view with per-record details.
+- **Health** — `GET /health` (text `ok`) and `GET /health/diagnostics` (JSON, with optional gated SMTP verify).
 
 ## Prerequisites
 

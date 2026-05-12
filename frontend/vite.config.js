@@ -9,6 +9,8 @@ export default defineConfig({
     proxy: {
       "/sendmail": { target: "http://localhost:5000", changeOrigin: true },
       "/health": { target: "http://localhost:5000", changeOrigin: true },
+      "/history": { target: "http://localhost:5000", changeOrigin: true },
+      "/admin": { target: "http://localhost:5000", changeOrigin: true },
     },
   },
 })

@@ -1,7 +1,14 @@
 # Backend (Bulk Mail)
 
-Express API: **`POST /sendmail`** with JSON `{ "msg": string, "emailList": string[] }`. Reads SMTP `user` / `pass` from MongoDB collection **`bulkmail`** (MongoDB via **`MONGODB_URI`** on the host, or `backend/.env` locally — `.env` is gitignored and never committed).
+Express API. Reads SMTP `user` / `pass` from MongoDB collection **`bulkmail`** (MongoDB via **`MONGODB_URI`** on the host, or `backend/.env` locally — `.env` is gitignored and never committed). Persists every send to the **`email_history`** collection.
 
+Routes:
+
+- **`POST /sendmail`** — JSON `{ "subject"?: string, "msg": string, "emailList": string[] }`. `subject` is optional (defaults to `BULK_MAIL_SUBJECT` env or `"Bulk mail"`). Returns `{ ok: true, sent: <number> }`. Each call also writes one row into `email_history` (subject, body preview, recipient preview, status, sent/total counts, provider, error info).
+- **`POST /admin/login`** — JSON `{ "username", "password" }`. Returns `{ ok: true, token, expiresAt }` (HMAC-signed session, 8h default). Rate-limited.
+- **`GET /admin/me`** — verifies the bearer token. Returns `{ ok: true, username, expiresAt }` or `401`.
+- **`GET /admin/status`** — public; reports whether admin login is configured on the server.
+- **`GET /history`** — admin-only. Returns paginated rows from `email_history` (newest first; `?limit=50&skip=0`).
 - **`GET /health`** returns plain **`ok`** (simple probes).
 - **`GET /health/diagnostics`** returns JSON uptime/Mongo thresholds; optional gated SMTP **`verify`** (see **`../DEPLOYMENT.md`**).
 
@@ -47,9 +54,27 @@ The host does **not** read `.env` from Git; define variables on the **same servi
 
 ## MongoDB data
 
-Default DB comes from your connection string path. Expected: a document (e.g. one record) in collection **`bulkmail`** with `user` and `pass` used by Gmail / Nodemailer. These credentials never reach the browser — only the backend reads them.
+Default DB comes from your connection string path.
+
+| Collection | Purpose |
+|------------|---------|
+| **`bulkmail`** | One document with string fields `user` + `pass` used by Gmail / Nodemailer. **Credentials never reach the browser** — only the backend reads them. |
+| **`email_history`** | Auto-created. One document per `POST /sendmail` invocation (subject, body preview, recipient preview/total, sent count, status, provider, timestamp, error). Read by `GET /history`. |
 
 For Gmail with 2FA, use an [App Password](https://support.google.com/accounts/answer/185833).
+
+## Admin auth
+
+`GET /history` is gated by a bearer token. Set these on the host before enabling the admin UI:
+
+| Variable | Required | Notes |
+|----------|----------|-------|
+| `ADMIN_USERNAME` | ✅ | Picks the login username. |
+| `ADMIN_PASSWORD` | ✅ | Strong, random — used only for HMAC-signed sessions. |
+| `ADMIN_SESSION_SECRET` | optional | Override the default HMAC secret. |
+| `ADMIN_SESSION_TTL_HOURS` | optional | Session lifetime (default `8`). |
+
+If both `ADMIN_USERNAME` and `ADMIN_PASSWORD` are unset, `/admin/login` returns `503 ADMIN_NOT_CONFIGURED` and `/history` is unreachable — by design. The frontend modal explains how to enable it.
 
 ## Deploy (Render)
 

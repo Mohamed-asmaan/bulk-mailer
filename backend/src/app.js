@@ -3,6 +3,7 @@ const cors = require("cors");
 const config = require("./config");
 const { registerHealthRoutes } = require("./routes/health");
 const { registerSendmailRoutes } = require("./routes/sendmail");
+const { registerAdminRoutes } = require("./routes/admin");
 
 function createApp(serverStartedAt) {
   const app = express();
@@ -22,6 +23,7 @@ function createApp(serverStartedAt) {
 
   registerHealthRoutes(app, serverStartedAt);
   registerSendmailRoutes(app);
+  registerAdminRoutes(app);
 
   return app;
 }

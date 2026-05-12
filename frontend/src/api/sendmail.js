@@ -1,8 +1,12 @@
 import axios from "axios";
 import { API_BASE, API_TIMEOUT_MS } from "../config";
 
-export function postSendmail(msg, emailList) {
-  return axios.post(`${API_BASE}/sendmail`, { msg, emailList }, { timeout: API_TIMEOUT_MS });
+export function postSendmail({ subject, msg, emailList }) {
+  return axios.post(
+    `${API_BASE}/sendmail`,
+    { subject, msg, emailList },
+    { timeout: API_TIMEOUT_MS },
+  );
 }
 
 export function sendSuccess(data) {

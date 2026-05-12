@@ -1,9 +1,10 @@
 const config = require("../config");
 
 const LOOSE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_SUBJECT_CHARS = 250;
 
 function validateSendMailBody(req, res, next) {
-  const { msg, emailList } = req.body ?? {};
+  const { msg, emailList, subject } = req.body ?? {};
   const errors = [];
 
   if (typeof msg !== "string") {
@@ -14,6 +15,18 @@ function validateSendMailBody(req, res, next) {
       errors.push("`msg` cannot be empty");
     } else if (trimmed.length > config.MAX_MESSAGE_CHARS) {
       errors.push(`\`msg\` exceeds max length (${config.MAX_MESSAGE_CHARS})`);
+    }
+  }
+
+  let normalizedSubject = "";
+  if (subject !== undefined && subject !== null) {
+    if (typeof subject !== "string") {
+      errors.push("`subject` must be a string");
+    } else {
+      normalizedSubject = subject.trim();
+      if (normalizedSubject.length > MAX_SUBJECT_CHARS) {
+        errors.push(`\`subject\` exceeds max length (${MAX_SUBJECT_CHARS})`);
+      }
     }
   }
 
@@ -44,9 +57,10 @@ function validateSendMailBody(req, res, next) {
 
   req._validated = {
     msg: String(msg).trim(),
+    subject: normalizedSubject,
     emailList: emailList.map((e) => String(e).trim()),
   };
   return next();
 }
 
-module.exports = { validateSendMailBody };
+module.exports = { validateSendMailBody, MAX_SUBJECT_CHARS };

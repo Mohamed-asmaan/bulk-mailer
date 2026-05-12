@@ -39,6 +39,12 @@ Operational / tuning:
 - **`HEALTH_DIAGNOSTICS_TOKEN`** + request header **`x-health-diagnostics-token`** — optional gated SMTP verify in `/health/diagnostics`. **Do not expose in the browser.**
 - **`TRUST_PROXY_HOPS`** — `1` typical on Render / Vercel-fronted hosts
 
+Admin (unlocks `/history` UI):
+
+- **`ADMIN_USERNAME`**, **`ADMIN_PASSWORD`** — both required, otherwise `/admin/login` returns `503` and the frontend modal explains it.
+- **`ADMIN_SESSION_SECRET`** — optional HMAC secret override.
+- **`ADMIN_SESSION_TTL_HOURS`** — optional session lifetime (default `8`).
+
 ## MongoDB Atlas checklist
 
 1. Cluster running; Network Access allows your host's outbound IPs (or `0.0.0.0/0` for development only — tighten for strict prod).
@@ -67,10 +73,14 @@ Operational / tuning:
 
 - **`GET /health`** — returns plain `ok` for simple probes.
 - **`GET /health/diagnostics`** — JSON: mongo state, uptime, CORS list, thresholds. SMTP `verify()` only when **`HEALTH_DIAGNOSTICS_TOKEN`** is set server-side **and** the same value is sent in **`x-health-diagnostics-token`**.
-- **`POST /sendmail`** — JSON `{ "msg": string, "emailList": string[] }`  
-  Success: **`200`** `{ "ok": true, "sent": number }`.  
+- **`POST /sendmail`** — JSON `{ "subject"?: string, "msg": string, "emailList": string[] }`  
+  Success: **`200`** `{ "ok": true, "sent": number }`. Every call (success or failure) writes one document into MongoDB collection **`email_history`**.  
   Validation: **`400`** `{ ok, code: "VALIDATION_ERROR", message }`.  
   Rate limit: **`429`**. SMTP problems: commonly **`502`**. Timeouts: **`504`**.
+- **`POST /admin/login`** — JSON `{ "username", "password" }` → **`200`** `{ ok: true, token, expiresAt }`. Wrong creds → **`401`**. Missing server config → **`503 ADMIN_NOT_CONFIGURED`**.
+- **`GET /admin/me`** — bearer token required → **`200`** `{ ok: true, username, expiresAt }`, else **`401`**.
+- **`GET /admin/status`** — public probe → **`200`** `{ ok: true, configured: boolean }`.
+- **`GET /history`** — bearer token required. Query `limit` (≤200), `skip`. **`200`** `{ ok: true, items, total, limit, skip }` (newest first; body trimmed, recipients preview capped at 25).
 
 ## Postman testing
 
@@ -79,10 +89,12 @@ Operational / tuning:
 3. `POST {{BASE}}/sendmail`:
    - **Body** → **raw** → **JSON** (not “none”):
 
-     `{"msg":"hello","emailList":["you@example.com"]}`
+     `{"subject":"Hello","msg":"hello body","emailList":["you@example.com"]}`
 
    - **Headers:** `Content-Type: application/json`  
    Without this, `express.json()` won’t parse the body and validation returns **400**.
+4. `POST {{BASE}}/admin/login` → `{"username":"…","password":"…"}` → `{ ok:true, token }`.
+5. `GET {{BASE}}/history` with header `Authorization: Bearer <token>` → list of recent sends.
 
 ## Frontend testing
 

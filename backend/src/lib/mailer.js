@@ -18,11 +18,11 @@ function createResendMailer(fromAddress, apiKey) {
   console.log(`[mailer] provider=resend from=${redactEmail(fromAddress)}`);
   return {
     provider: "resend",
-    async sendOne(to, msg) {
+    async sendOne(to, msg, subject) {
       const { data, error } = await resend.emails.send({
         from: fromAddress,
         to,
-        subject: DEFAULT_SUBJECT,
+        subject: subject?.trim() || DEFAULT_SUBJECT,
         text: msg,
       });
       if (error) {
@@ -51,11 +51,11 @@ async function createSmtpMailer(user, pass) {
   console.log(`[mailer] provider=smtp from=${redactEmail(user)}`);
   return {
     provider: "smtp",
-    async sendOne(to, msg) {
+    async sendOne(to, msg, subject) {
       return transporter.sendMail({
         from: user,
         to,
-        subject: DEFAULT_SUBJECT,
+        subject: subject?.trim() || DEFAULT_SUBJECT,
         text: msg,
       });
     },
