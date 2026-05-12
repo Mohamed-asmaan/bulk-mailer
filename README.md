@@ -1,12 +1,12 @@
 # bulk-mailer
 
-Compose a message, upload an Excel file with emails in column **A**, and send bulk mail through [Express](https://expressjs.com/) + [Nodemailer](https://nodemailer.com/). SMTP credentials are loaded from MongoDB.
+Compose a message, upload an Excel file with emails in column **A**, and send bulk mail through [Express](https://expressjs.com/) + [Nodemailer](https://nodemailer.com/). SMTP credentials are loaded from MongoDB — never committed to the repo.
 
-| | Link |
+| | Live link |
 |--|------|
+| **Try it (Frontend)** | [bulk-mailer-seven-mu.vercel.app](https://bulk-mailer-seven-mu.vercel.app/) |
+| **API (Render)** | [bulk-mailer-ehdq.onrender.com](https://bulk-mailer-ehdq.onrender.com) |
 | **Repo** | [github.com/Mohamed-asmaan/bulk-mailer](https://github.com/Mohamed-asmaan/bulk-mailer) |
-| **Frontend** | [bulk-mailer-seven-mu.vercel.app](https://bulk-mailer-seven-mu.vercel.app/) |
-| **API** | [bulk-mailer-ehdq.onrender.com](https://bulk-mailer-ehdq.onrender.com) |
 
 ## Stack
 
@@ -26,7 +26,11 @@ Node.js **18+**, a **MongoDB** database (Atlas ok), Excel with addresses in colu
 
 Details, env vars, and deploy steps live in each folder’s README.
 
-**Production hardening**, Railway/Vercel/Atlas checklists: **[DEPLOYMENT.md](DEPLOYMENT.md)**.
+**Production hardening**, Render/Vercel/Atlas checklists: **[DEPLOYMENT.md](DEPLOYMENT.md)**.
+
+## Secrets
+
+No SMTP password, MongoDB URI, or Gmail credentials are stored in this repo. `.env` files are gitignored; only `.env.example` placeholders are tracked. The browser never receives credentials — SMTP `user`/`pass` are read by the backend from MongoDB (collection `bulkmail`) and the database URI is supplied at runtime via the host’s environment variables (Render / local `.env`).
 
 ## License
 

@@ -9,7 +9,7 @@ This follows the hardened Express + Vite stack in this repo (see `backend/index.
 | `app.listen()` before MongoDB connected | Routes served while DB down; flaky `/sendmail` | `await mongoose.connect()` before registering `/sendmail` and `listen()` |
 | 404/error middleware mounted before `/sendmail` | `POST /sendmail` never reached | `/sendmail` registered before 404 and central error handler |
 | CORS preflight / origin | Bad paths or `callback(Error)` blowing up proxies | **`app.options("/sendmail")`** registered **before** `app.use(cors)`, with **`callback(null, false)`** (never **`callback(Error)`**) for denied origins |
-| No `trust proxy` on Railway | Rate limit keyed badly; weird client IP behavior | `app.set('trust proxy', …)` |
+| No `trust proxy` on Render/Vercel | Rate limit keyed badly; weird client IP behavior | `app.set('trust proxy', …)` |
 | No request validation | 500 / odd errors on bad payloads | `validateSendMailBody` → 400 JSON |
 | Sequential `sendMail` without timeout | Hung requests → gateway 502/timeouts | `withTimeout()` per message + configurable SMTP timeouts |
 | Weak error handling | Unhandled async → process issues | Wrapped async route with `.catch(next)` + central error middleware |
@@ -18,12 +18,12 @@ This follows the hardened Express + Vite stack in this repo (see `backend/index.
 | Frontend only treated `res.data === true` | Broken after JSON `{ ok: true }` success | Accepts `{ ok: true }` + optional `sent` |
 | axios default timeout too low for bulk | Client abort while server still sending | `VITE_API_TIMEOUT_MS` (default 180s in code) |
 
-## Railway environment variables checklist
+## Backend environment variables checklist (Render or equivalent)
 
 Required:
 
-- **`MONGODB_URI`** — connection string MUST include **`/passkey`** (or your DB name) before `?`, e.g. `...mongodb.net/passkey?appName=...`
-- **`PORT`** — usually injected by Railway; do not hardcode duplicate listen ports in Dockerfile
+- **`MONGODB_URI`** — connection string MUST include **`/<dbname>`** (e.g. **`/passkey`**) before `?`, e.g. `...mongodb.net/passkey?appName=...`. **Never commit this value.** Set it in the host dashboard or local `.env` (gitignored).
+- **`PORT`** — usually injected by the host (Render does this); do not hardcode duplicate listen ports.
 
 Highly recommended:
 
@@ -36,12 +36,12 @@ Operational / tuning:
 - **`SENDMAIL_RATE_MAX`** / **`SENDMAIL_RATE_WINDOW_MS`** — anti-abuse
 - **`MAX_RECIPIENTS`**, **`MAX_MESSAGE_CHARS`** — caps
 - **`SMTP_PER_MESSAGE_TIMEOUT_MS`**, **`SMTP_SEND_GAP_MS`** — timeouts + Gmail pacing
-- **`HEALTH_DIAGNOSTICS_TOKEN`** + request header **`x-health-diagnostics-token`** — optional gated SMTP verify in `/health/diagnostics`
-- **`TRUST_PROXY_HOPS`** — `1` typical on Railway
+- **`HEALTH_DIAGNOSTICS_TOKEN`** + request header **`x-health-diagnostics-token`** — optional gated SMTP verify in `/health/diagnostics`. **Do not expose in the browser.**
+- **`TRUST_PROXY_HOPS`** — `1` typical on Render / Vercel-fronted hosts
 
 ## MongoDB Atlas checklist
 
-1. Cluster running; Network Access allows **Railway outbound IPs** (or `0.0.0.0/0` for development only — tighten for strict prod).
+1. Cluster running; Network Access allows your host's outbound IPs (or `0.0.0.0/0` for development only — tighten for strict prod).
 2. Database **`passkey`**, collection **`bulkmail`**, exactly one document shaped as:
 
    `{ "user": "<email>", "pass": "<Google app password or SMTP secret>" }`
@@ -59,7 +59,7 @@ Operational / tuning:
 
 ## Vercel checklist
 
-1. **`VITE_API_URL`** = `https://bulk-mailer-production-c86d.up.railway.app` (no trailing slash), or bake via `.env.production`. **Must match Railway’s generated domain** (subdomain changes when you recreate the service).
+1. **`VITE_API_URL`** = `https://bulk-mailer-ehdq.onrender.com` (no trailing slash), or bake via `.env.production`. **Must match the API host's generated domain** (subdomain changes when you recreate the service).
 2. Redeploy after env changes — Vite bakes env at **build time**.
 3. Optionally set **`VITE_API_TIMEOUT_MS`** (milliseconds) if you routinely send hundreds of mails per click.
 
@@ -89,14 +89,15 @@ Operational / tuning:
 1. Local: `frontend` → `npm run dev`, ensure backend `:5000` running (proxy avoids CORS).
 2. Prod: open Vercel URL, upload small Excel column A emails, send; watch Network tab for status **200** and JSON body **`ok: true`**.
 
-## Common Railway **502** causes
+## Common **502** causes (Render and similar PaaS)
 
 | Cause | Signal |
 |---------|------|
 | Process crash on boot | Logs stop before `[http] listening` |
-| Mongo never connects | Logs `[mongo] connect failed`; old code exited — now exits before listen |
+| Mongo never connects | Logs `[mongo] connect failed`; app exits before listen |
 | Request timeouts / hung SMTP | Logs show `[sendmail] SMTP failure` / `ETIMEOUT`; increase SMTP timeouts or reduce batch |
 | Crash after boot | `[process] uncaughtException` |
+| Free-tier cold start | First request after idle is slow; subsequent requests are normal |
 
 ## Rate-limit suggestion
 
