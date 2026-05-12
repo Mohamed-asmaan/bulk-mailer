@@ -30,9 +30,6 @@ export default function HeroGraphic({ className = "" }) {
         strokeLinejoin="round"
       />
       <path d="M72 258l104-74M328 258L224 184" stroke="#38bdf8" strokeOpacity="0.4" strokeWidth="2" />
-      <circle cx="320" cy="72" r="36" fill="#0891b2" fillOpacity="0.25" />
-      <circle cx="320" cy="72" r="20" fill="#06b6d4" fillOpacity="0.5" />
-      <path d="M310 72l7 7 14-14" stroke="#ecfeff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
